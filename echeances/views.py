@@ -208,6 +208,9 @@ class EcheanceCreate(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
         messages.success(self.request, "Échéance enregistrée.")
         return resp
 
+    def get_success_url(self):
+        return reverse("liste")
+
 
 class EcheanceUpdate(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Echeance

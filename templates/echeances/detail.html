@@ -9,6 +9,7 @@
        {% if object.est_ouverte %}<span class="urgence--{{ object.urgence }}">{{ object.jours_restants|jours }}</span>{% endif %}</p>
   </div>
   <div class="actions" style="margin:0">
+    <a class="btn btn--clair" href="{% url 'liste' %}">← Retour à la liste</a>
     {% if perms.echeances.change_echeance %}<a class="btn btn--clair" href="{% url 'echeance_modifier' object.pk %}">Modifier</a>{% endif %}
     {% if perms.echeances.delete_echeance %}<a class="btn btn--clair action--danger" href="{% url 'echeance_supprimer' object.pk %}">Supprimer</a>{% endif %}
   </div>

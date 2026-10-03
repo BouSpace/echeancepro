@@ -69,7 +69,7 @@ h3 { font-size: 1rem; font-weight: 700; }
 }
 .retard-banque { white-space: nowrap; font-size: .88rem; }
 .contenu-app { min-width: 0; }
-.barre-haut { display: flex; justify-content: flex-end; padding: .75rem 1.5rem 0; }
+.barre-haut { display: flex; justify-content: flex-end; padding: .75rem 2rem 0; }
 .menu-user { position: relative; }
 .menu-user__bouton {
   display: flex; align-items: center; gap: .6rem; cursor: pointer; font: inherit; color: var(--encre);
@@ -103,7 +103,7 @@ h3 { font-size: 1rem; font-weight: 700; }
 .menu-user__liste a:hover, .menu-user__liste button:hover { background: var(--ciel); }
 .menu-user__liste form { margin: 0; }
 
-main { width: 100%; max-width: 1240px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
+main { width: 100%; padding: 1.75rem 2rem 4rem; }
 .titre-page { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
 .titre-page p { margin: .25rem 0 0; color: var(--gris); }
 
