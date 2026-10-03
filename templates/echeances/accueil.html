@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titre %}Accueil{% endblock %}
+{% block contenu %}
+<div class="titre-page"><h1>Bonjour {{ user.get_full_name|default:user.username }}</h1></div>
+<div class="panneau">
+  <p>Votre compte n'a pas accès au tableau de bord des échéances.</p>
+  <p class="discret">Utilisez les rubriques du menu à gauche, ou demandez à un administrateur de vous attribuer un rôle supplémentaire.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ÉchéancePro : lancer le serveur",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/manage.py",
+      "args": ["runserver"],
+      "django": true,
+      "justMyCode": true
+    },
+    {
+      "name": "ÉchéancePro : envoyer les alertes du jour",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/manage.py",
+      "args": ["envoyer_alertes", "--force"],
+      "django": true
+    },
+    {
+      "name": "ÉchéancePro : tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/manage.py",
+      "args": ["test", "echeances"],
+      "django": true
+    }
+  ]
+}

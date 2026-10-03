@@ -1,0 +1,9 @@
+[Unit]
+Description=ÉchéancePro : envoi du récapitulatif d'alertes
+After=network.target postgresql.service
+
+[Service]
+Type=oneshot
+User=echeancepro
+WorkingDirectory=/srv/echeancepro/app
+ExecStart=/srv/echeancepro/app/.venv/bin/python manage.py envoyer_alertes

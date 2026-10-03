@@ -1,0 +1,9 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Migrations", "type": "shell", "command": "python manage.py migrate", "problemMatcher": [] },
+    { "label": "Créer les rôles", "type": "shell", "command": "python manage.py init_roles", "problemMatcher": [] },
+    { "label": "Charger les données de démonstration", "type": "shell", "command": "python manage.py charger_demo", "problemMatcher": [] },
+    { "label": "Créer un administrateur", "type": "shell", "command": "python manage.py createsuperuser", "problemMatcher": [] }
+  ]
+}

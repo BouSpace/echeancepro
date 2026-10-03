@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titre %}Fournisseurs{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div><h1>Fournisseurs</h1><p>{{ fournisseurs|length }} fournisseur{{ fournisseurs|length|pluralize }}</p></div>
+  {% if perms.echeances.add_fournisseur %}<div class="actions" style="margin:0"><a class="btn" href="{% url 'fournisseur_creer' %}">Nouveau fournisseur</a></div>{% endif %}
+</div>
+<form class="filtres" method="get">
+  <div><label for="q">Recherche</label><input type="search" id="q" name="q" value="{{ q }}" placeholder="Nom, téléphone ou e-mail"></div>
+  <button class="btn" type="submit">Filtrer</button>
+  <a class="btn btn--clair" href="{% url 'fournisseurs' %}">Effacer</a>
+</form>
+<div class="panneau" style="padding:0"><div class="tableau-defile">
+<table>
+  <thead><tr><th>Nom</th><th>Téléphone</th><th>E-mail</th><th>Statut</th><th class="col-actions">Actions</th></tr></thead>
+  <tbody>
+  {% for f in fournisseurs %}
+    <tr>
+      <td>{{ f.nom }}</td><td>{{ f.telephone|default:"—" }}</td><td>{{ f.email|default:"—" }}</td>
+      <td>{% if f.actif %}<span class="etiquette statut--PAYEE">Actif</span>{% else %}<span class="etiquette statut--ANNULEE">Inactif</span>{% endif %}</td>
+      <td class="col-actions">
+        <a class="action" href="{% url 'fournisseur_detail' f.pk %}">Voir</a>
+        {% if perms.echeances.change_fournisseur %}<a class="action" href="{% url 'fournisseur_modifier' f.pk %}">Modifier</a>{% endif %}
+        {% if perms.echeances.delete_fournisseur %}<a class="action action--danger" href="{% url 'fournisseur_supprimer' f.pk %}">Supprimer</a>{% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5" class="vide">Aucun fournisseur.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div></div>
+{% endblock %}

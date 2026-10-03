@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titre %}{% if object %}Modifier l'échéance{% else %}Nouvelle échéance{% endif %}{% endblock %}
+{% block contenu %}
+<div class="titre-page"><h1>{% if object %}Modifier l'échéance{% elif request.GET.renouvelle %}Nouvelle traite (renouvellement){% else %}Nouvelle échéance{% endif %}</h1></div>
+<form class="panneau" method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<p class="erreur">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <div class="formulaire">
+    {% for f in form %}
+    <div class="champ {% if f.name == 'commentaire' or f.name == 'piece_jointe' %}champ--large{% endif %}">
+      <label for="{{ f.id_for_label }}">{{ f.label|capfirst }}</label>
+      {{ f }}
+      {% if f.help_text %}<span class="aide">{{ f.help_text }}</span>{% endif %}
+      {% for err in f.errors %}<span class="erreur">{{ err }}</span>{% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="actions">
+    <button class="btn" type="submit">Enregistrer l'échéance</button>
+    <a class="btn btn--clair" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'liste' %}{% endif %}">Annuler</a>
+  </div>
+</form>
+{% endblock %}

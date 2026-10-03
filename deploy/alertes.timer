@@ -1,0 +1,9 @@
+[Unit]
+Description=ÉchéancePro : alertes chaque matin (lundi au samedi, 7 h 30)
+
+[Timer]
+OnCalendar=Mon..Sat 07:30
+Persistent=true
+
+[Install]
+WantedBy=timers.target

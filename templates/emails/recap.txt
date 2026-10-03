@@ -1,0 +1,14 @@
+{% load fcfa %}ÉchéancePro — récapitulatif du {{ jour|date:"l j F Y" }}
+{% if retard %}
+EN RETARD ({{ retard|length }}) — {{ total_retard|fcfa }}
+{% for e in retard %}  - {{ e.date_echeance|date:"d/m/Y" }}  {{ e.fournisseur }} ({{ e.get_type_display }}, {{ e.banque }})  {{ e.montant_total|fcfa }}
+{% endfor %}{% endif %}{% if aujourdhui %}
+AUJOURD'HUI ({{ aujourdhui|length }}) — {{ total_aujourdhui|fcfa }}
+{% for e in aujourdhui %}  - {{ e.fournisseur }} ({{ e.get_type_display }}, {{ e.banque }})  {{ e.montant_total|fcfa }}
+{% endfor %}{% endif %}{% for p in paliers %}
+DANS {{ p.jours }} JOURS ({{ p.echeances|length }}) — {{ p.total|fcfa }}
+{% for e in p.echeances %}  - {{ e.date_echeance|date:"d/m/Y" }}  {{ e.fournisseur }} ({{ e.get_type_display }}, {{ e.banque }})  {{ e.montant_total|fcfa }}
+{% endfor %}{% endfor %}
+7 prochains jours : {{ nb_semaine }} échéance(s), {{ total_semaine|fcfa }} à couvrir.
+
+Ouvrir ÉchéancePro : {{ site_url }}/

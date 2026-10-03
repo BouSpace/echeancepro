@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load static %}
+{% block titre %}Connexion{% endblock %}
+{% block corps %}
+<div class="connexion">
+  <form class="connexion__boite" method="post">
+    {% csrf_token %}
+    <img src="{% static 'img/logo.png' %}" alt="ÉchéancePro — Anticipez vos échéances, sécurisez vos provisions">
+    {% if form.errors %}<p class="erreur">Identifiant ou mot de passe incorrect.</p>{% endif %}
+    <div class="champ"><label for="id_username">Identifiant</label>{{ form.username }}</div>
+    <div class="champ"><label for="id_password">Mot de passe</label>{{ form.password }}</div>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn" type="submit" style="width:100%;justify-content:center">Se connecter</button>
+  </form>
+</div>
+{% endblock %}

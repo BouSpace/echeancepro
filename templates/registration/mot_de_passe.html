@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titre %}Changer le mot de passe{% endblock %}
+{% block contenu %}
+<div class="titre-page"><h1>Changer mon mot de passe</h1></div>
+<form class="panneau" method="post" novalidate>
+  {% csrf_token %}
+  <div class="formulaire">
+    {% for f in form %}
+    <div class="champ">
+      <label for="{{ f.id_for_label }}">{{ f.label|capfirst }}</label>
+      {{ f }}
+      {% if f.help_text %}<span class="aide">{{ f.help_text|safe }}</span>{% endif %}
+      {% for err in f.errors %}<span class="erreur">{{ err }}</span>{% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="actions">
+    <button class="btn" type="submit">Changer le mot de passe</button>
+    <a class="btn btn--clair" href="{% url 'profil' %}">Annuler</a>
+  </div>
+</form>
+{% endblock %}

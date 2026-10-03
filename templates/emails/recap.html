@@ -1,0 +1,32 @@
+{% load fcfa %}<!DOCTYPE html>
+<html lang="fr"><body style="margin:0;background:#F3F6FA;font-family:Segoe UI,Arial,sans-serif;color:#0A2F6B">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border:1px solid #D9E2EE;border-radius:10px">
+<tr><td style="padding:20px 24px;border-bottom:1px solid #D9E2EE">
+  <div style="font-size:20px;font-weight:800">ÉchéancePro</div>
+  <div style="color:#5B6B82">Récapitulatif du {{ jour|date:"l j F Y" }}</div>
+</td></tr>
+{% if retard %}
+<tr><td style="padding:16px 24px;background:#FDE7E5">
+  <div style="font-weight:700;color:#B42318">En retard : {{ retard|length }} échéance{{ retard|length|pluralize }} · {{ total_retard|fcfa }}</div>
+  {% for e in retard %}<div style="padding-top:6px">{{ e.date_echeance|date:"d/m/Y" }} — {{ e.fournisseur }} ({{ e.get_type_display }}, {{ e.banque }}) : <strong>{{ e.montant_total|fcfa }}</strong></div>{% endfor %}
+</td></tr>
+{% endif %}
+{% if aujourdhui %}
+<tr><td style="padding:16px 24px;border-top:1px solid #D9E2EE">
+  <div style="font-weight:700;color:#B42318">Aujourd'hui · {{ total_aujourdhui|fcfa }}</div>
+  {% for e in aujourdhui %}<div style="padding-top:6px">{{ e.fournisseur }} ({{ e.get_type_display }}, {{ e.banque }}) : <strong>{{ e.montant_total|fcfa }}</strong></div>{% endfor %}
+</td></tr>
+{% endif %}
+{% for p in paliers %}
+<tr><td style="padding:16px 24px;border-top:1px solid #D9E2EE">
+  <div style="font-weight:700">Dans {{ p.jours }} jours · {{ p.total|fcfa }}</div>
+  {% for e in p.echeances %}<div style="padding-top:6px">{{ e.date_echeance|date:"d/m/Y" }} — {{ e.fournisseur }} ({{ e.get_type_display }}, {{ e.banque }}) : <strong>{{ e.montant_total|fcfa }}</strong></div>{% endfor %}
+</td></tr>
+{% endfor %}
+<tr><td style="padding:16px 24px;border-top:1px solid #D9E2EE;color:#5B6B82">
+  7 prochains jours : {{ nb_semaine }} échéance{{ nb_semaine|pluralize }}, {{ total_semaine|fcfa }} à couvrir.<br><br>
+  <a href="{{ site_url }}/" style="display:inline-block;background:#0B4DA2;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:600">Ouvrir ÉchéancePro</a>
+</td></tr>
+</table></td></tr></table>
+</body></html>

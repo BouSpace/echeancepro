@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titre %}Importer{% endblock %}
+{% block contenu %}
+<div class="titre-page"><div><h1>Importer des échéances</h1>
+<p>Remplissez le modèle Excel (une ligne par échéance), puis déposez-le ici. Rien n'est importé tant qu'une ligne contient une erreur.</p></div></div>
+<div class="panneau">
+  <p><a class="btn btn--clair" href="{% url 'modele_import' %}">Télécharger le modèle Excel</a></p>
+  {% if erreurs %}
+  <div class="messages"><li class="error"><strong>Import refusé. Corrigez ces lignes puis recommencez :</strong>
+    <ul>{% for e in erreurs %}<li>{{ e }}</li>{% endfor %}</ul></li></div>
+  {% endif %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="champ" style="display:grid;gap:.3rem;max-width:420px"><label for="id_fichier">{{ form.fichier.label }}</label>{{ form.fichier }}
+      {% for err in form.fichier.errors %}<span class="erreur">{{ err }}</span>{% endfor %}</div>
+    <div class="actions"><button class="btn" type="submit">Importer le fichier</button></div>
+  </form>
+</div>
+{% endblock %}

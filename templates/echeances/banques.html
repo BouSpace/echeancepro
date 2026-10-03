@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titre %}Banques{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div><h1>Banques</h1><p>{{ banques|length }} banque{{ banques|length|pluralize }}</p></div>
+  {% if perms.echeances.add_banque %}<div class="actions" style="margin:0"><a class="btn" href="{% url 'banque_creer' %}">Nouvelle banque</a></div>{% endif %}
+</div>
+<form class="filtres" method="get">
+  <div><label for="q">Recherche</label><input type="search" id="q" name="q" value="{{ q }}" placeholder="Nom, n° de compte ou code"></div>
+  <button class="btn" type="submit">Filtrer</button>
+  <a class="btn btn--clair" href="{% url 'banques' %}">Effacer</a>
+</form>
+<div class="panneau" style="padding:0"><div class="tableau-defile">
+<table>
+  <thead><tr><th>Nom</th><th>N° de compte</th><th>Code</th><th>Statut</th><th class="col-actions">Actions</th></tr></thead>
+  <tbody>
+  {% for b in banques %}
+    <tr>
+      <td>{{ b.nom }}</td><td class="num">{{ b.numero_compte|default:"—" }}</td><td>{{ b.code|default:"—" }}</td>
+      <td>{% if b.actif %}<span class="etiquette statut--PAYEE">Active</span>{% else %}<span class="etiquette statut--ANNULEE">Inactive</span>{% endif %}</td>
+      <td class="col-actions">
+        <a class="action" href="{% url 'banque_detail' b.pk %}">Voir</a>
+        {% if perms.echeances.change_banque %}<a class="action" href="{% url 'banque_modifier' b.pk %}">Modifier</a>{% endif %}
+        {% if perms.echeances.delete_banque %}<a class="action action--danger" href="{% url 'banque_supprimer' b.pk %}">Supprimer</a>{% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5" class="vide">Aucune banque.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div></div>
+{% endblock %}

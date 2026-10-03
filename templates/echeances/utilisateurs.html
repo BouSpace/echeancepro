@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titre %}Utilisateurs{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div><h1>Utilisateurs</h1><p>{{ utilisateurs|length }} compte{{ utilisateurs|length|pluralize }}</p></div>
+  {% if perms.auth.add_user %}<div class="actions" style="margin:0"><a class="btn" href="{% url 'utilisateur_creer' %}">Nouvel utilisateur</a></div>{% endif %}
+</div>
+<form class="filtres" method="get">
+  {% for f in form %}<div><label for="{{ f.id_for_label }}">{{ f.label }}</label>{{ f }}</div>{% endfor %}
+  <button class="btn" type="submit">Filtrer</button>
+  <a class="btn btn--clair" href="{% url 'utilisateurs' %}">Effacer</a>
+</form>
+
+<div class="panneau" style="padding:0">
+<div class="tableau-defile">
+<table>
+  <thead><tr><th>Identifiant</th><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Statut</th><th class="col-actions">Actions</th></tr></thead>
+  <tbody>
+  {% for u in utilisateurs %}
+    <tr>
+      <td><span class="avatar avatar--petit" aria-hidden="true">{% if u.profil.photo %}<img src="{{ u.profil.photo.url }}" alt="">{% else %}{{ u.username|slice:":1"|upper }}{% endif %}</span> {{ u.username }}</td>
+      <td>{{ u.get_full_name|default:"—" }}</td>
+      <td>{{ u.email|default:"—" }}</td>
+      <td>{% if u.is_superuser %}<span class="etiquette">Administrateur</span>{% endif %}{% for g in u.groups.all %}<span class="etiquette">{{ g.name }}</span> {% endfor %}</td>
+      <td>{% if u.is_active %}<span class="etiquette statut--PAYEE">Actif</span>{% else %}<span class="etiquette statut--ANNULEE">Désactivé</span>{% endif %}</td>
+      <td class="col-actions">
+        {% if perms.auth.view_user %}<a class="action" href="{% url 'utilisateur_detail' u.pk %}">Voir</a>{% endif %}
+        {% if perms.auth.change_user %}<a class="action" href="{% url 'utilisateur_modifier' u.pk %}">Modifier</a>{% endif %}
+        {% if perms.auth.delete_user and u != user %}<a class="action action--danger" href="{% url 'utilisateur_supprimer' u.pk %}">Supprimer</a>{% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6" class="vide">Aucun utilisateur ne correspond à ces filtres.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+</div>
+{% endblock %}

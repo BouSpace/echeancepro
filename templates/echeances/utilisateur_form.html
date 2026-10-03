@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titre %}{% if utilisateur %}Modifier l'utilisateur{% else %}Nouvel utilisateur{% endif %}{% endblock %}
+{% block contenu %}
+<div class="titre-page"><h1>{% if utilisateur %}Modifier {{ utilisateur.username }}{% else %}Nouvel utilisateur{% endif %}</h1></div>
+<form class="panneau" method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<p class="erreur">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <div class="formulaire">
+    {% for f in form %}
+    <div class="champ">
+      <label for="{{ f.id_for_label }}">{{ f.label|capfirst }}</label>
+      {{ f }}
+      {% if f.help_text %}<span class="aide">{{ f.help_text }}</span>{% endif %}
+      {% for err in f.errors %}<span class="erreur">{{ err }}</span>{% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="actions">
+    <button class="btn" type="submit">{% if utilisateur %}Enregistrer{% else %}Créer l'utilisateur{% endif %}</button>
+    <a class="btn btn--clair" href="{% url 'utilisateurs' %}">Annuler</a>
+    {% if utilisateur and perms.auth.delete_user and utilisateur != user %}<a class="btn btn--clair action--danger" href="{% url 'utilisateur_supprimer' utilisateur.pk %}" style="margin-left:auto">Supprimer l'utilisateur</a>{% endif %}
+  </div>
+</form>
+{% endblock %}

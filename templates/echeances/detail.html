@@ -1,0 +1,74 @@
+{% extends "base.html" %}{% load fcfa %}
+{% block titre %}{{ object.fournisseur }}{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div>
+    <h1>{{ object.fournisseur }}</h1>
+    <p><span class="etiquette etiquette--{{ object.type }}">{{ object.get_type_display }}</span>
+       <span class="etiquette statut--{{ object.statut }}">{{ object.get_statut_display }}</span>
+       {% if object.est_ouverte %}<span class="urgence--{{ object.urgence }}">{{ object.jours_restants|jours }}</span>{% endif %}</p>
+  </div>
+  <div class="actions" style="margin:0">
+    {% if perms.echeances.change_echeance %}<a class="btn btn--clair" href="{% url 'echeance_modifier' object.pk %}">Modifier</a>{% endif %}
+    {% if perms.echeances.delete_echeance %}<a class="btn btn--clair action--danger" href="{% url 'echeance_supprimer' object.pk %}">Supprimer</a>{% endif %}
+  </div>
+</div>
+
+<div class="fiche">
+  <div>
+    <section class="panneau">
+      <dl class="proprietes">
+        <dt>Banque</dt><dd>{{ object.banque.nom }}</dd>
+        <dt>Référence</dt><dd>{{ object.reference|default:"—" }}</dd>
+        <dt>Date de création</dt><dd>{{ object.date_creation|date:"d/m/Y" }}</dd>
+        <dt>Date d'échéance</dt><dd>{{ object.date_echeance|date:"l d/m/Y" }}</dd>
+        <dt>Montant</dt><dd class="montant">{{ object.montant|fcfa }}</dd>
+        {% if object.cout_aval %}<dt>Coût d'aval et frais</dt><dd class="montant">{{ object.cout_aval|fcfa }}</dd>{% endif %}
+        <dt>Montant total</dt><dd class="montant">{{ object.montant_total|fcfa }}</dd>
+        {% if object.commentaire %}<dt>Commentaire</dt><dd>{{ object.commentaire|linebreaksbr }}</dd>{% endif %}
+        {% if object.piece_jointe %}<dt>Pièce jointe</dt><dd><a href="{{ object.piece_jointe.url }}">Ouvrir le document</a></dd>{% endif %}
+        {% if not object.est_ouverte %}
+        <dt>Clôturée le</dt><dd>{{ object.date_cloture|date:"d/m/Y"|default:"—" }}</dd>
+        {% if object.reference_cloture %}<dt>Référence ou motif</dt><dd>{{ object.reference_cloture }}</dd>{% endif %}
+        {% endif %}
+        {% if object.renouvelee_par %}<dt>Remplacée par</dt><dd><a href="{{ object.renouvelee_par.get_absolute_url }}">Échéance du {{ object.renouvelee_par.date_echeance|date:"d/m/Y" }}</a></dd>{% endif %}
+        {% if object.renouvelle %}<dt>Renouvelle</dt><dd><a href="{{ object.renouvelle.get_absolute_url }}">Échéance du {{ object.renouvelle.date_echeance|date:"d/m/Y" }}</a></dd>{% endif %}
+      </dl>
+    </section>
+
+    <section class="panneau">
+      <h2>Historique</h2>
+      <ul class="historique">
+        {% for h in historique %}
+        <li><strong>{{ h.history_date|date:"d/m/Y H:i" }}</strong> — {{ h.history_user|default:"système" }} :
+          {% if h.history_type == "+" %}création{% elif h.history_type == "-" %}suppression{% else %}modification{% endif %}
+          {% if h.history_type == "~" %}(statut : {{ h.get_statut_display|lower }}){% endif %}</li>
+        {% empty %}<li>Aucun historique.</li>{% endfor %}
+      </ul>
+    </section>
+  </div>
+
+  <aside>
+    {% if object.est_ouverte and perms.echeances.cloturer_echeance %}
+    <form class="panneau" method="post" action="{% url 'echeance_cloturer' object.pk %}">
+      {% csrf_token %}
+      <h2>Enregistrer le résultat</h2>
+      <p class="discret">La traite ou le chèque est-il passé ?</p>
+      <div class="choix-radio">{% for r in cloture_form.statut %}<label>{{ r.tag }} {{ r.choice_label }}</label>{% endfor %}</div>
+      {% for err in cloture_form.statut.errors %}<p class="erreur">{{ err }}</p>{% endfor %}
+      <div class="champ" style="display:grid;gap:.3rem;margin-top:1rem"><label for="{{ cloture_form.date_cloture.id_for_label }}">{{ cloture_form.date_cloture.label }}</label>{{ cloture_form.date_cloture }}</div>
+      <div class="champ" style="display:grid;gap:.3rem;margin-top:.75rem"><label for="{{ cloture_form.reference.id_for_label }}">{{ cloture_form.reference.label }}</label>{{ cloture_form.reference }}
+        {% for err in cloture_form.reference.errors %}<span class="erreur">{{ err }}</span>{% endfor %}</div>
+      <div class="actions"><button class="btn btn--vert" type="submit">Enregistrer le résultat</button></div>
+    </form>
+    {% elif not object.est_ouverte and not object.renouvelee_par and perms.echeances.cloturer_echeance %}
+    <form class="panneau" method="post" action="{% url 'echeance_rouvrir' object.pk %}">
+      {% csrf_token %}
+      <h2>Résultat enregistré</h2>
+      <p class="discret">Une erreur de saisie ? Rouvrez l'échéance pour la corriger.</p>
+      <button class="btn btn--clair" type="submit">Rouvrir l'échéance</button>
+    </form>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

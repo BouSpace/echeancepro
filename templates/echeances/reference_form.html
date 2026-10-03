@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titre %}{{ titre_table }}{% endblock %}
+{% block contenu %}
+<div class="titre-page"><h1>{{ titre_table }}</h1></div>
+<form class="panneau" method="post" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<p class="erreur">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <div class="formulaire">
+    {% for f in form %}
+    <div class="champ">
+      <label for="{{ f.id_for_label }}">{{ f.label|capfirst }}</label>
+      {{ f }}
+      {% if f.help_text %}<span class="aide">{{ f.help_text }}</span>{% endif %}
+      {% for err in f.errors %}<span class="erreur">{{ err }}</span>{% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="actions">
+    <button class="btn" type="submit">Enregistrer</button>
+    <a class="btn btn--clair" href="{{ url_liste }}">Annuler</a>
+  </div>
+</form>
+{% endblock %}

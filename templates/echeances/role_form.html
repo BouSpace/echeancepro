@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titre %}{% if object %}Modifier le rôle{% else %}Nouveau rôle{% endif %}{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div>
+    <h1>{% if object %}Modifier le rôle « {{ object.name }} »{% else %}Nouveau rôle{% endif %}</h1>
+    <p>Cochez les actions que ce rôle autorise. Un utilisateur peut cumuler plusieurs rôles.</p>
+  </div>
+</div>
+<form method="post" novalidate>
+  {% csrf_token %}
+  <div class="panneau">
+    {% if form.non_field_errors %}<p class="erreur">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+    <div class="champ" style="display:grid;gap:.3rem;max-width:420px">
+      <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+      {{ form.name }}
+      {% for err in form.name.errors %}<span class="erreur">{{ err }}</span>{% endfor %}
+    </div>
+  </div>
+
+  <div class="roles-grille">
+    {% for titre, champs in form.sections %}
+    <section class="carte-droits">
+      <div class="carte-droits__tete">
+        <h2>{{ titre }}</h2>
+        <button type="button" data-tout>Tout cocher</button>
+      </div>
+      {% for f in champs %}
+      <label class="case-droit" for="{{ f.id_for_label }}">{{ f }} {{ f.label }}</label>
+      {% endfor %}
+    </section>
+    {% endfor %}
+  </div>
+
+  <div class="actions">
+    <button class="btn" type="submit">Enregistrer le rôle</button>
+    <a class="btn btn--clair" href="{% url 'roles' %}">Annuler</a>
+  </div>
+</form>
+<script>
+document.querySelectorAll('[data-tout]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var cases = b.closest('.carte-droits').querySelectorAll('input[type=checkbox]');
+    var tout = Array.prototype.every.call(cases, function (c) { return c.checked; });
+    cases.forEach(function (c) { c.checked = !tout; });
+    b.textContent = tout ? 'Tout cocher' : 'Tout décocher';
+  });
+});
+</script>
+{% endblock %}

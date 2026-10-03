@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titre %}Mon profil{% endblock %}
+{% block contenu %}
+<div class="titre-page"><div><h1>Mon profil</h1><p>Identifiant : {{ user.username }}</p></div></div>
+<form class="panneau" method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  <div class="formulaire">
+    {% for f in form %}
+    <div class="champ">
+      <label for="{{ f.id_for_label }}">{{ f.label|capfirst }}</label>
+      {{ f }}
+      {% for err in f.errors %}<span class="erreur">{{ err }}</span>{% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="actions">
+    <button class="btn" type="submit">Enregistrer</button>
+    <a class="btn btn--clair" href="{% url 'mot_de_passe' %}">Changer mon mot de passe</a>
+  </div>
+</form>
+{% endblock %}

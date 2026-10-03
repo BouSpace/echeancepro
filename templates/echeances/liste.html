@@ -1,0 +1,49 @@
+{% extends "base.html" %}{% load fcfa %}
+{% block titre %}Échéances{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div><h1>Échéances</h1><p>{{ echeances|length }} résultat{{ echeances|length|pluralize }} · total {{ total|fcfa }}</p></div>
+  <div class="actions" style="margin:0">
+    {% if perms.echeances.exporter_echeance %}<a class="btn btn--clair" href="{% url 'export_excel' %}?{{ querystring }}">Exporter en Excel</a>{% endif %}
+    {% if perms.echeances.add_echeance %}<a class="btn" href="{% url 'echeance_creer' %}">Nouvelle échéance</a>{% endif %}
+  </div>
+</div>
+
+<form class="filtres" method="get">
+  {% for f in form %}<div><label for="{{ f.id_for_label }}">{{ f.label }}</label>{{ f }}</div>{% endfor %}
+  <button class="btn" type="submit">Filtrer</button>
+  <a class="btn btn--clair" href="{% url 'liste' %}">Effacer</a>
+</form>
+
+<div class="panneau" style="padding:0">
+<div class="tableau-defile">
+<table>
+  <thead><tr>
+    <th>Échéance</th><th>Fournisseur</th><th>Type</th><th>Banque</th><th>Référence</th>
+    <th class="montant">Montant total</th><th>Statut</th><th class="col-actions">Actions</th>
+  </tr></thead>
+  <tbody>
+  {% for e in echeances %}
+    <tr class="{% if e.en_retard %}ligne--retard{% endif %}">
+      <td><a href="{{ e.get_absolute_url }}">{{ e.date_echeance|date:"d/m/Y" }}</a>{% if e.est_ouverte %}<br><span class="urgence--{{ e.urgence }}">{{ e.jours_restants|jours }}</span>{% endif %}</td>
+      <td>{{ e.fournisseur }}</td>
+      <td><span class="etiquette etiquette--{{ e.type }}">{{ e.get_type_display }}</span></td>
+      <td>{{ e.banque }}</td>
+      <td>{{ e.reference|default:"—" }}</td>
+      <td class="montant">{{ e.montant_total|fcfa }}</td>
+      <td><span class="etiquette statut--{{ e.statut }}">{{ e.get_statut_display }}</span></td>
+      <td class="col-actions">
+        <a class="action" href="{{ e.get_absolute_url }}">Voir</a>
+        {% if perms.echeances.change_echeance %}<a class="action" href="{% url 'echeance_modifier' e.pk %}">Modifier</a>{% endif %}
+        {% if perms.echeances.delete_echeance %}<a class="action action--danger" href="{% url 'echeance_supprimer' e.pk %}">Supprimer</a>{% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="8" class="vide">Aucune échéance ne correspond à ces filtres.</td></tr>
+  {% endfor %}
+  </tbody>
+  {% if echeances %}<tfoot><tr><td colspan="5">Total</td><td class="montant">{{ total|fcfa }}</td><td></td><td></td></tr></tfoot>{% endif %}
+</table>
+</div>
+</div>
+{% endblock %}

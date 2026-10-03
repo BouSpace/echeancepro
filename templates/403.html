@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block titre %}Accès refusé{% endblock %}
+{% block contenu %}
+<h1>Accès refusé</h1>
+<p>Votre rôle ne permet pas cette action. Demandez à un administrateur de vous attribuer le rôle Gestionnaire ou Valideur.</p>
+<p><a class="btn btn--clair" href="{% url 'tableau_de_bord' %}">Retour au tableau de bord</a></p>
+{% endblock %}

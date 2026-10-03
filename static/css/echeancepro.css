@@ -1,0 +1,290 @@
+/* ÉchéancePro — feuille de style
+   Palette tirée du logo : bleu marine (texte), bleu (actions), bleu ciel (cases du calendrier),
+   vert (réglé). L'urgence se lit par couleur ET par libellé, jamais par la couleur seule. */
+
+:root {
+  --encre: #0A2F6B;
+  --bleu: #0B4DA2;
+  --bleu-fonce: #083a7c;
+  --ciel: #DCEBFB;
+  --ciel-fort: #8EC1F0;
+  --vert: #23843A;
+  --vert-pale: #E3F3E1;
+  --ambre: #A86A00;
+  --ambre-pale: #FFF2D6;
+  --rouge: #B42318;
+  --rouge-pale: #FDE7E5;
+  --fond: #F3F6FA;
+  --papier: #FFFFFF;
+  --trait: #D9E2EE;
+  --gris: #5B6B82;
+  --rayon: 10px;
+  --titres: "Montserrat", "Segoe UI", system-ui, sans-serif;
+  --texte: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { font-size: 16px; }
+body {
+  margin: 0; background: var(--fond); color: var(--encre);
+  font-family: var(--texte); line-height: 1.5;
+}
+a { color: var(--bleu); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--ciel-fort); outline-offset: 2px;
+}
+h1, h2, h3 { font-family: var(--titres); color: var(--encre); line-height: 1.2; margin: 0 0 .5rem; }
+h1 { font-size: 1.6rem; font-weight: 800; }
+h2 { font-size: 1.15rem; font-weight: 700; }
+h3 { font-size: 1rem; font-weight: 700; }
+.num, td.montant, .montant { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.discret { color: var(--gris); }
+
+/* --- En-tête -------------------------------------------------------------- */
+.app { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100vh; }
+.entete {
+  background: var(--papier); border-right: 1px solid var(--trait);
+  position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 10;
+  display: flex; flex-direction: column; gap: 1.5rem; padding: 1.25rem 1rem;
+}
+.entete__logo img { width: 100%; max-height: 48px; object-fit: contain; object-position: left; display: block; }
+.nav { display: flex; flex-direction: column; gap: .35rem; flex: 1; }
+.nav a {
+  display: flex; align-items: center; gap: .7rem;
+  text-decoration: none; color: var(--encre); font-weight: 600;
+  padding: .7rem .85rem; border-radius: 10px;
+}
+.nav a svg { width: 20px; height: 20px; fill: currentColor; flex: none; }
+.nav .pastille { margin-left: auto; }
+.nav__groupe { display: flex; flex-direction: column; gap: .35rem; margin-top: .9rem; }
+.nav__titre {
+  margin: 0; padding: 0 .85rem; font: 700 .72rem var(--titres); letter-spacing: .08em;
+  text-transform: uppercase; color: var(--gris);
+}
+.nav a:hover { background: var(--ciel); }
+.nav a[aria-current="page"] { background: var(--encre); color: #fff; }
+.nav .pastille {
+  display: inline-block; min-width: 1.4em; padding: 0 .4em; margin-left: .3em;
+  border-radius: 99px; background: var(--rouge); color: #fff; font-size: .8em; text-align: center;
+}
+.retard-banque { white-space: nowrap; font-size: .88rem; }
+.contenu-app { min-width: 0; }
+.barre-haut { display: flex; justify-content: flex-end; padding: .75rem 1.5rem 0; }
+.menu-user { position: relative; }
+.menu-user__bouton {
+  display: flex; align-items: center; gap: .6rem; cursor: pointer; font: inherit; color: var(--encre);
+  background: var(--papier); border: 1px solid var(--trait); border-radius: 99px; padding: .3rem .6rem .3rem .3rem;
+}
+.menu-user__bouton:hover { background: var(--ciel); }
+.menu-user__nom { font-weight: 600; }
+.menu-user__fleche { width: 20px; height: 20px; fill: var(--gris); }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--bleu); color: #fff;
+  display: grid; place-items: center; font: 700 1rem var(--titres);
+}
+.apercu { display: flex; align-items: center; gap: .9rem; margin-top: .4rem; }
+.apercu[hidden] { display: none; }
+.apercu img { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 1px solid var(--trait); background: var(--fond); }
+.avatar { overflow: hidden; }
+.avatar--petit { display: inline-grid; width: 28px; height: 28px; font-size: .85rem; vertical-align: middle; margin-right: .4rem; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.menu-user__liste {
+  position: absolute; right: 0; top: calc(100% + .4rem); min-width: 230px; z-index: 20;
+  background: var(--papier); border: 1px solid var(--trait); border-radius: var(--rayon);
+  box-shadow: 0 8px 24px rgba(10, 47, 107, .12); padding: .4rem;
+}
+.menu-user__liste[hidden] { display: none; }
+.menu-user__id { display: grid; padding: .5rem .7rem .6rem; border-bottom: 1px solid var(--trait); margin-bottom: .3rem; }
+.menu-user__id span { color: var(--gris); font-size: .88rem; overflow-wrap: anywhere; }
+.menu-user__liste a, .menu-user__liste button {
+  display: block; width: 100%; text-align: left; font: 600 .95rem var(--texte); color: var(--encre);
+  background: none; border: 0; border-radius: 8px; padding: .55rem .7rem; text-decoration: none; cursor: pointer;
+}
+.menu-user__liste a:hover, .menu-user__liste button:hover { background: var(--ciel); }
+.menu-user__liste form { margin: 0; }
+
+main { width: 100%; max-width: 1240px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
+.titre-page { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.titre-page p { margin: .25rem 0 0; color: var(--gris); }
+
+/* --- Boutons ------------------------------------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem; cursor: pointer;
+  font: 600 .95rem var(--texte); text-decoration: none;
+  padding: .55rem 1rem; border-radius: 8px; border: 1px solid transparent;
+  background: var(--bleu); color: #fff;
+}
+.btn:hover { background: var(--bleu-fonce); }
+.btn--clair { background: var(--papier); color: var(--encre); border-color: var(--trait); }
+.btn--clair:hover { background: var(--ciel); }
+.btn--vert { background: var(--vert); }
+.btn--lien { background: none; color: var(--bleu); padding: 0; border: 0; }
+.btn--lien:hover { background: none; text-decoration: underline; }
+
+/* --- Messages --------------------------------------------------------------- */
+.messages { list-style: none; padding: 0; margin: 0 0 1.25rem; display: grid; gap: .5rem; }
+.messages li { padding: .7rem 1rem; border-radius: 8px; background: var(--ciel); }
+.messages .success { background: var(--vert-pale); color: var(--vert); }
+.messages .warning, .messages .error { background: var(--rouge-pale); color: var(--rouge); }
+
+/* --- Bandeau des chiffres clés ------------------------------------------------------ */
+.chiffres {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  background: var(--papier); border: 1px solid var(--trait); border-radius: var(--rayon);
+  margin-bottom: 1.75rem; overflow: hidden;
+}
+.chiffre { padding: 1.1rem 1.4rem; text-decoration: none; color: inherit; }
+.chiffre + .chiffre { border-left: 1px solid var(--trait); }
+.chiffre:hover { background: var(--fond); }
+.chiffre__libelle { font-weight: 600; color: var(--gris); }
+.chiffre__valeur { font: 800 1.7rem/1.2 var(--titres); margin: .2rem 0; font-variant-numeric: tabular-nums; }
+.chiffre__detail { color: var(--gris); font-size: .95rem; }
+.chiffre--alerte { background: var(--rouge-pale); }
+.chiffre--alerte .chiffre__valeur, .chiffre--alerte .chiffre__libelle { color: var(--rouge); }
+
+/* --- Disposition du tableau de bord ----------------------------------------------- */
+.colonnes { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 1.75rem; align-items: start; }
+.panneau { background: var(--papier); border: 1px solid var(--trait); border-radius: var(--rayon); padding: 1.25rem 1.4rem; }
+.panneau + .panneau { margin-top: 1.75rem; }
+.panneau__tete { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: .75rem; }
+
+/* --- L'échéancier : chaque jour est une case de calendrier, comme dans le logo ----------- */
+.echeancier { list-style: none; margin: 0; padding: 0; }
+.jour { display: grid; grid-template-columns: 4.25rem 1fr; gap: 1rem; padding: .9rem 0; border-top: 1px solid var(--trait); }
+.jour:first-child { border-top: 0; padding-top: .25rem; }
+.case {
+  border-radius: 9px; text-align: center; padding: .35rem 0 .45rem;
+  background: var(--ciel); color: var(--encre); align-self: start;
+}
+.case__jour { font: 800 1.55rem/1.1 var(--titres); display: block; font-variant-numeric: tabular-nums; }
+.case__mois { font-size: .8rem; font-weight: 600; }
+.case__delai { display: block; font-size: .75rem; margin-top: .15rem; }
+.jour--aujourdhui .case, .jour--urgent .case { background: var(--rouge-pale); color: var(--rouge); }
+.jour--proche .case { background: var(--ambre-pale); color: var(--ambre); }
+.jour__entete { display: flex; justify-content: space-between; gap: 1rem; font-weight: 700; margin-bottom: .3rem; }
+.jour__lignes { list-style: none; margin: 0; padding: 0; }
+.jour__lignes li { display: flex; justify-content: space-between; gap: 1rem; padding: .15rem 0; }
+.jour__lignes a { color: var(--encre); text-decoration: none; }
+.jour__lignes a:hover { text-decoration: underline; }
+
+/* --- Étiquettes ---------------------------------------------------------------- */
+.etiquette {
+  display: inline-block; padding: .1rem .55rem; border-radius: 99px;
+  font-size: .82rem; font-weight: 600; white-space: nowrap;
+  background: var(--ciel); color: var(--encre);
+}
+.etiquette--CHEQUE { background: #EDE7FB; color: #4B2A9A; }
+.etiquette--TRAITE { background: var(--ciel); color: var(--bleu-fonce); }
+.statut--A_VENIR { background: var(--ciel); }
+.statut--PAYEE { background: var(--vert-pale); color: var(--vert); }
+.statut--IMPAYEE { background: var(--rouge-pale); color: var(--rouge); }
+.statut--RENOUVELEE { background: var(--ambre-pale); color: var(--ambre); }
+.statut--ANNULEE { background: #EEF0F3; color: var(--gris); }
+.urgence--retard { color: var(--rouge); font-weight: 700; }
+.urgence--aujourdhui, .urgence--urgent { color: var(--rouge); font-weight: 600; }
+.urgence--proche { color: var(--ambre); font-weight: 600; }
+
+/* --- Tableaux --------------------------------------------------------------- */
+.tableau-defile { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .6rem .7rem; text-align: left; border-bottom: 1px solid var(--trait); vertical-align: top; }
+th { font-family: var(--titres); font-size: .82rem; font-weight: 700; color: var(--gris); background: var(--fond); }
+td.montant, th.montant { text-align: right; }
+tbody tr:hover { background: #F8FAFD; }
+tr.ligne--retard td:first-child { box-shadow: inset 4px 0 0 var(--rouge); }
+tfoot td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--encre); }
+.vide { padding: 2rem; text-align: center; color: var(--gris); }
+.cellule-vide { color: #B8C3D3; }
+
+/* --- Formulaires ----------------------------------------------------------- */
+.filtres { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; margin-bottom: 1.25rem; }
+.filtres > div { display: grid; gap: .25rem; }
+label { font-weight: 600; font-size: .92rem; }
+input[type=text], input[type=search], input[type=number], input[type=date], input[type=password],
+input[type=email], select, textarea {
+  font: inherit; color: var(--encre); background: var(--papier);
+  border: 1px solid #B9C7DA; border-radius: 8px; padding: .5rem .65rem; min-width: 0;
+}
+textarea { width: 100%; }
+.formulaire { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.5rem; }
+.formulaire .champ { display: grid; gap: .3rem; align-content: start; }
+.formulaire .champ--large { grid-column: 1 / -1; }
+.formulaire input, .formulaire select { width: 100%; }
+.aide { color: var(--gris); font-size: .85rem; }
+.erreur { color: var(--rouge); font-size: .9rem; }
+.actions { display: flex; gap: .75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+.choix-radio { display: grid; gap: .4rem; }
+.choix-radio label { font-weight: 400; display: flex; gap: .5rem; align-items: center; }
+
+/* --- Fiche d'une échéance ----------------------------------------------------- */
+.fiche { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.75rem; align-items: start; }
+.proprietes { display: grid; grid-template-columns: max-content 1fr; gap: .55rem 1.5rem; margin: 0; }
+.proprietes dt { color: var(--gris); }
+.proprietes dd { margin: 0; font-weight: 600; }
+.historique { list-style: none; padding: 0; margin: 0; font-size: .93rem; }
+.historique li { padding: .5rem 0; border-top: 1px solid var(--trait); }
+
+/* --- Connexion -------------------------------------------------------------- */
+.connexion { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
+.connexion__boite { background: var(--papier); border: 1px solid var(--trait); border-radius: 14px; padding: 2rem; width: min(420px, 100%); }
+.connexion__boite img { width: 100%; margin-bottom: 1.5rem; }
+.connexion__boite .champ { display: grid; gap: .3rem; margin-bottom: 1rem; }
+.connexion__boite input { width: 100%; }
+
+@media (max-width: 900px) {
+  .colonnes, .fiche { grid-template-columns: 1fr; }
+  .chiffres { grid-template-columns: 1fr; }
+  .chiffre + .chiffre { border-left: 0; border-top: 1px solid var(--trait); }
+  .formulaire { grid-template-columns: 1fr; }
+  .app { grid-template-columns: 1fr; }
+  .entete { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--trait); gap: .75rem; }
+  .nav { flex-direction: row; flex-wrap: wrap; }
+  .nav .pastille { margin-left: .3em; }
+  .nav__groupe { flex-direction: row; flex-wrap: wrap; align-items: center; margin-top: 0; }
+  .nav__titre { width: 100%; }
+  .menu-user__nom { display: none; }
+}
+@media print {
+  .app { display: block; }
+  .barre-haut, .entete, .actions, .filtres, .btn { display: none !important; }
+  body { background: #fff; }
+}
+
+/* Tableau d'approvisionnement : beaucoup de colonnes, cellules resserrées */
+.tableau-serre th, .tableau-serre td { padding: .55rem .45rem; font-size: .92rem; }
+.tableau-serre th:first-child, .tableau-serre td:first-child { padding-left: .9rem; }
+.tableau-serre th:last-child, .tableau-serre td:last-child { padding-right: .9rem; }
+
+/* Répartition par type */
+.repartition { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+.repartition__ligne { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .35rem; }
+.repartition a { text-decoration: none; }
+.barre { height: 10px; border-radius: 99px; background: var(--fond); overflow: hidden; margin-bottom: .3rem; }
+.barre span { display: block; height: 100%; border-radius: 99px; }
+.barre--CHEQUE { background: #4B2A9A; }
+.barre--TRAITE { background: var(--bleu); }
+
+/* Rôles : grille de droits en cartes */
+.roles-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; margin-top: 1.25rem; }
+.carte-droits { background: var(--papier); border: 1px solid var(--trait); border-radius: var(--rayon); padding: 1rem 1.25rem; }
+.carte-droits__tete { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .5rem; }
+.carte-droits h2 { margin: 0; font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; color: var(--vert); }
+.carte-droits button { font: 600 .8rem var(--texte); background: none; border: 0; color: var(--bleu); cursor: pointer; padding: 0; }
+.case-droit { display: flex; align-items: center; gap: .6rem; padding: .3rem 0; font-weight: 400; cursor: pointer; }
+.case-droit input { width: 1.05rem; height: 1.05rem; flex: none; }
+#id_roles { display: grid; gap: .4rem; }
+#id_roles label { font-weight: 400; display: flex; align-items: center; gap: .5rem; }
+@media (max-width: 900px) { .roles-grille { grid-template-columns: 1fr; } }
+
+/* Actions en bout de ligne des tableaux */
+th.col-actions { width: 1%; }
+td.col-actions { white-space: nowrap; text-align: right; }
+.action {
+  display: inline-block; font: 600 .85rem var(--texte); text-decoration: none; cursor: pointer;
+  padding: .25rem .6rem; border-radius: 7px; border: 1px solid var(--trait); background: var(--papier); color: var(--encre);
+}
+.action:hover { background: var(--ciel); }
+.action--danger { color: var(--rouge); }
+.action--danger:hover { background: var(--rouge-pale); border-color: var(--rouge); }
+.btn--danger { background: var(--rouge); }
+.btn--danger:hover { background: #8f1c12; }

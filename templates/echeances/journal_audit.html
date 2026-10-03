@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titre %}Journal d'audit{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div><h1>Journal d'audit</h1><p>{{ page.paginator.count }} événement{{ page.paginator.count|pluralize }} · qui a fait quoi, et quand.</p></div>
+</div>
+
+<form class="filtres" method="get">
+  {% for f in form %}<div><label for="{{ f.id_for_label }}">{{ f.label }}</label>{{ f }}</div>{% endfor %}
+  <button class="btn" type="submit">Filtrer</button>
+  <a class="btn btn--clair" href="{% url 'journal_audit' %}">Effacer</a>
+</form>
+
+<div class="panneau" style="padding:0"><div class="tableau-defile">
+<table>
+  <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Objet</th><th>Détail</th></tr></thead>
+  <tbody>
+  {% for l in lignes %}
+    <tr>
+      <td class="num">{{ l.date|date:"d/m/Y H:i" }}</td>
+      <td>{% if l.utilisateur %}{{ l.utilisateur.get_full_name|default:l.utilisateur.username }}{% else %}<span class="cellule-vide">—</span>{% endif %}</td>
+      <td><span class="etiquette {{ l.action.1 }}">{{ l.action.0 }}</span></td>
+      <td><span class="discret">{{ l.type }}</span><br>{% if l.url %}<a href="{{ l.url }}">{{ l.libelle }}</a>{% else %}{{ l.libelle }}{% endif %}</td>
+      <td>{% for c in l.changements %}{{ c }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="cellule-vide">—</span>{% endfor %}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5" class="vide">Aucun événement ne correspond à ces filtres.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div></div>
+
+{% if page.has_other_pages %}
+<div class="actions" style="align-items:center">
+  {% if page.has_previous %}<a class="btn btn--clair" href="?{{ querystring }}&page={{ page.previous_page_number }}">← Précédent</a>{% endif %}
+  <span class="discret">Page {{ page.number }} sur {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a class="btn btn--clair" href="?{{ querystring }}&page={{ page.next_page_number }}">Suivant →</a>{% endif %}
+</div>
+{% endif %}
+<p class="aide">Le journal enregistre les échéances, banques, fournisseurs et périodes. Les événements antérieurs à l'activation du journal pour les banques, fournisseurs et périodes n'y figurent pas.</p>
+{% endblock %}

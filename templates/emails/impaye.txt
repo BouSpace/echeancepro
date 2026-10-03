@@ -1,0 +1,9 @@
+{% load fcfa %}IMPAYÉ signalé dans ÉchéancePro
+
+{{ e.get_type_display }} — {{ e.fournisseur }}
+Banque : {{ e.banque.nom }}
+Échéance : {{ e.date_echeance|date:"d/m/Y" }}
+Montant : {{ e.montant_total|fcfa }}
+Motif : {{ e.reference_cloture|default:"non précisé" }}
+
+Voir la fiche : {{ site_url }}{{ e.get_absolute_url }}

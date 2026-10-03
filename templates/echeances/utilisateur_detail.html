@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titre %}{{ utilisateur.username }}{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div><h1>{{ utilisateur.get_full_name|default:utilisateur.username }}</h1></div>
+  <div class="actions" style="margin:0">
+    <a class="btn btn--clair" href="{% url 'utilisateurs' %}">Retour à la liste</a>
+    {% if perms.auth.change_user %}<a class="btn" href="{% url 'utilisateur_modifier' utilisateur.pk %}">Modifier</a>{% endif %}
+    {% if perms.auth.delete_user and utilisateur != user %}<a class="btn btn--clair action--danger" href="{% url 'utilisateur_supprimer' utilisateur.pk %}">Supprimer</a>{% endif %}
+  </div>
+</div>
+<section class="panneau">
+  {% if utilisateur.profil.photo %}<p><img src="{{ utilisateur.profil.photo.url }}" alt="Photo de {{ utilisateur.username }}" style="width:96px;height:96px;border-radius:50%;object-fit:cover"></p>{% endif %}
+  <dl class="proprietes">
+    <dt>Identifiant</dt><dd>{{ utilisateur.username }}</dd>
+    <dt>Nom</dt><dd>{{ utilisateur.get_full_name|default:"—" }}</dd>
+    <dt>E-mail</dt><dd>{{ utilisateur.email|default:"—" }}</dd>
+    <dt>Rôle</dt><dd>{% if utilisateur.is_superuser %}Administrateur{% else %}{% for g in utilisateur.groups.all %}{{ g.name }}{% empty %}—{% endfor %}{% endif %}</dd>
+    <dt>Statut</dt><dd>{% if utilisateur.is_active %}Actif{% else %}Désactivé{% endif %}</dd>
+    <dt>Dernière connexion</dt><dd>{{ utilisateur.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</dd>
+    <dt>Créé le</dt><dd>{{ utilisateur.date_joined|date:"d/m/Y" }}</dd>
+  </dl>
+</section>
+{% endblock %}

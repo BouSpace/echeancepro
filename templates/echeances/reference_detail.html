@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% load fcfa %}
+{% block titre %}{{ titre_table }}{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div><h1>{{ titre_table }}</h1></div>
+  <div class="actions" style="margin:0">
+    <a class="btn btn--clair" href="{{ url_liste }}">Retour à la liste</a>
+    {% if peut_modifier %}<a class="btn" href="{% if url_modifier == 'banque_modifier' %}{% url 'banque_modifier' object.pk %}{% else %}{% url 'fournisseur_modifier' object.pk %}{% endif %}">Modifier</a>{% endif %}
+  </div>
+</div>
+<section class="panneau">
+  <dl class="proprietes">
+    {% for libelle, valeur in champs %}<dt>{{ libelle }}</dt><dd>{{ valeur }}</dd>{% endfor %}
+  </dl>
+</section>
+<section class="panneau">
+  <h2>Dernières échéances</h2>
+  <div class="tableau-defile">
+  <table>
+    <thead><tr><th>Échéance</th><th>Type</th><th class="montant">Montant total</th><th>Statut</th></tr></thead>
+    <tbody>
+    {% for e in echeances %}
+      <tr>
+        <td><a href="{{ e.get_absolute_url }}">{{ e.date_echeance|date:"d/m/Y" }}</a></td>
+        <td><span class="etiquette etiquette--{{ e.type }}">{{ e.get_type_display }}</span></td>
+        <td class="montant">{{ e.montant_total|fcfa }}</td>
+        <td><span class="etiquette statut--{{ e.statut }}">{{ e.get_statut_display }}</span></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4" class="vide">Aucune échéance.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

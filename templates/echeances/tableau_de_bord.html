@@ -1,0 +1,127 @@
+{% extends "base.html" %}{% load fcfa %}
+{% block titre %}Tableau de bord{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div>
+    <h1>Échéances à couvrir</h1>
+    <p>Situation au {{ today|date:"l j F Y" }}</p>
+  </div>
+  {% if perms.echeances.add_echeance %}<a class="btn" href="{% url 'echeance_creer' %}">Nouvelle échéance</a>{% endif %}
+</div>
+
+<div class="chiffres">
+  <a class="chiffre {% if retard %}chiffre--alerte{% endif %}" href="{% url 'liste' %}?periode=retard">
+    <div class="chiffre__libelle">En retard</div>
+    <div class="chiffre__valeur">{{ total_retard|fcfa }}</div>
+    <div class="chiffre__detail">{% if retard %}{{ retard|length }} échéance{{ retard|length|pluralize }} non clôturée{{ retard|length|pluralize }}{% else %}Aucune échéance dépassée{% endif %}</div>
+  </a>
+  {% for t in tuiles %}
+  <a class="chiffre" href="{% url 'liste' %}?periode={{ t.periode.jours }}&statut=ouvertes">
+    <div class="chiffre__libelle">{{ t.periode.libelle }}</div>
+    <div class="chiffre__valeur">{{ t.total|fcfa }}</div>
+    <div class="chiffre__detail">{{ t.nb }} échéance{{ t.nb|pluralize }}</div>
+  </a>
+  {% endfor %}
+</div>
+
+<div class="colonnes">
+  <section class="panneau" aria-labelledby="titre-echeancier">
+    <div class="panneau__tete">
+      <h2 id="titre-echeancier">Échéancier des 30 prochains jours</h2>
+      <a href="{% url 'liste' %}?periode=30&statut=ouvertes">Tout voir</a>
+    </div>
+    {% if calendrier %}
+    <ol class="echeancier">
+      {% for j in calendrier %}
+      <li class="jour {% if j.delta == 0 %}jour--aujourdhui{% elif j.delta <= 3 %}jour--urgent{% elif j.delta <= 7 %}jour--proche{% endif %}">
+        <div class="case">
+          <span class="case__jour">{{ j.date|date:"j" }}</span>
+          <span class="case__mois">{{ j.date|date:"M" }}</span>
+          <span class="case__delai">{{ j.delta|jours }}</span>
+        </div>
+        <div>
+          <div class="jour__entete"><span>{{ j.date|date:"l" }}</span><span class="montant">{{ j.total|fcfa }}</span></div>
+          <ul class="jour__lignes">
+            {% for e in j.echeances %}
+            <li>
+              <span><a href="{{ e.get_absolute_url }}">{{ e.fournisseur }}</a> <span class="etiquette etiquette--{{ e.type }}">{{ e.get_type_display }}</span> <span class="discret">{{ e.banque }}</span></span>
+              <span class="montant">{{ e.montant_total|fcfa }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="vide">Aucune échéance dans les 30 prochains jours.</p>
+    {% endif %}
+  </section>
+
+  <div>
+    {% if retard %}
+    <section class="panneau" aria-labelledby="titre-retard">
+      <div class="panneau__tete"><h2 id="titre-retard">À régulariser</h2></div>
+      <p class="discret">Échéance dépassée sans résultat enregistré. Indiquez si elle a été payée ou non.</p>
+      <ul class="jour__lignes">
+        {% for e in retard %}
+        <li>
+          <span><a href="{{ e.get_absolute_url }}">{{ e.fournisseur }}</a><br><span class="urgence--retard">{{ e.jours_restants|jours }}</span> <span class="discret">· {{ e.banque }}</span></span>
+          <span class="montant">{{ e.montant_total|fcfa }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    <section class="panneau" aria-labelledby="titre-types">
+      <div class="panneau__tete">
+        <h2 id="titre-types">Par type</h2>
+        <a href="{% url 'liste' %}?statut=ouvertes">Tout voir</a>
+      </div>
+      {% if par_type.nb %}
+      <ul class="repartition">
+        {% for l in par_type.lignes %}
+        <li>
+          <div class="repartition__ligne">
+            <a href="{% url 'liste' %}?statut=ouvertes&type={{ l.type }}"><span class="etiquette etiquette--{{ l.type }}">{{ l.libelle }}</span></a>
+            <span class="montant"><strong>{{ l.total|fcfa }}</strong> · {{ l.part }} %</span>
+          </div>
+          <div class="barre" role="img" aria-label="{{ l.libelle }} : {{ l.part }} % du montant"><span class="barre--{{ l.type }}" style="width: {{ l.part }}%"></span></div>
+          <div class="discret">{{ l.nb }} échéance{{ l.nb|pluralize }} ouverte{{ l.nb|pluralize }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="aide">Échéances ouvertes (non clôturées), retards compris.</p>
+      {% else %}
+      <p class="vide">Aucune échéance ouverte.</p>
+      {% endif %}
+    </section>
+
+    <section class="panneau" aria-labelledby="titre-banques">
+      <div class="panneau__tete">
+        <h2 id="titre-banques">Par banque</h2>
+        <a href="{% url 'approvisionnement' %}">Détail par semaine</a>
+      </div>
+      {% if par_banque %}
+      <div class="tableau-defile">
+      <table>
+        <thead><tr><th>Banque</th>{% for p in periodes %}<th class="montant" title="{{ p.libelle }}">{{ p.jours }} j</th>{% endfor %}</tr></thead>
+        <tbody>
+          {% for l in par_banque %}
+          <tr>
+            <td>{{ l.banque }}{% if l.retard %}<br><span class="urgence--retard retard-banque">+ {{ l.retard|millions }} en retard</span>{% endif %}</td>
+            {% for v in l.valeurs %}<td class="montant">{% if v %}{{ v|millions }}{% else %}<span class="cellule-vide">—</span>{% endif %}</td>{% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      <p class="aide">Montants en millions de F CFA (montant + coût d'aval).</p>
+      {% else %}
+      <p class="vide">Aucune échéance ouverte.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

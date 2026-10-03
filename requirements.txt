@@ -1,0 +1,9 @@
+Django>=5.2,<6.0
+django-simple-history>=3.5
+openpyxl>=3.1
+Pillow>=10.0
+python-dotenv>=1.0
+whitenoise>=6.6
+# Production (serveur Linux)
+gunicorn>=22.0; sys_platform != "win32"
+psycopg[binary]>=3.1

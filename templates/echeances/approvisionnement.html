@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load fcfa %}
+{% block titre %}À approvisionner{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div>
+    <h1>Montants à approvisionner</h1>
+    <p>Échéances ouvertes à couvrir, par banque, sur le mois en cours et les 5 mois suivants.</p>
+  </div>
+  <button class="btn btn--clair" type="button" onclick="window.print()">Imprimer</button>
+</div>
+<div class="panneau" style="padding:0">
+<div class="tableau-defile">
+<table>
+  <thead><tr>
+    <th>Banque</th><th class="montant">Montant attendu</th>
+    {% for m in mois %}<th class="montant">{{ m.debut|date:"F Y"|capfirst }}{% if forloop.first %}<br><span class="aide">(en cours)</span>{% endif %}</th>{% endfor %}
+  </tr></thead>
+  <tbody>
+  {% for l in lignes %}
+    <tr>
+      <td><strong>{{ l.banque }}</strong></td>
+      <td class="montant"><strong>{{ l.total|fcfa }}</strong></td>
+      {% for v in l.cellules %}<td class="montant">{% if v %}{{ v|fcfa }}{% else %}<span class="cellule-vide">—</span>{% endif %}</td>{% endfor %}
+    </tr>
+  {% empty %}
+    <tr><td colspan="8" class="vide">Aucune échéance ouverte sur la période.</td></tr>
+  {% endfor %}
+  </tbody>
+  {% if lignes %}
+  <tfoot><tr>
+    <td>Total</td><td class="montant">{{ total_general|fcfa }}</td>
+    {% for v in totaux %}<td class="montant">{% if v %}{{ v|fcfa }}{% else %}—{% endif %}</td>{% endfor %}
+  </tr></tfoot>
+  {% endif %}
+</table>
+</div>
+</div>
+{% if total_retard %}<p class="aide"><span class="urgence--retard">{{ total_retard|fcfa }}</span> d'échéances en retard ne sont pas comptés ci-dessus (<a href="{% url 'liste' %}?periode=retard">voir</a>).</p>{% endif %}
+<p class="aide">Le solde des comptes n'est pas suivi par ÉchéancePro : comparez ces montants à vos soldes bancaires.</p>
+{% endblock %}

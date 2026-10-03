@@ -1,0 +1,114 @@
+{% load static %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}ÉchéancePro{% endblock %} — ÉchéancePro</title>
+  <link rel="icon" href="{% static 'img/favicon.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/icone-180.png' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/echeancepro.css' %}">
+</head>
+<body>
+{% block corps %}
+<div class="app">
+<aside class="entete" aria-label="Menu latéral">
+  <a class="entete__logo" href="{% url 'tableau_de_bord' %}"><img src="{% static 'img/logo-entete.png' %}" alt="ÉchéancePro"></a>
+  {% with nom=request.resolver_match.url_name %}
+  <nav class="nav" aria-label="Navigation principale">
+    <a href="{% url 'tableau_de_bord' %}" {% if nom == 'tableau_de_bord' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3zm0 8h8v-6H3zm10 0h8V11h-8zm0-18v6h8V3z"/></svg>Tableau de bord</a>
+    <div class="nav__groupe">
+      <p class="nav__titre">Opérations courantes</p>
+    {% if perms.echeances.view_echeance %}<a href="{% url 'liste' %}" {% if nom == 'liste' or nom == 'echeance_detail' or nom == 'echeance_creer' or nom == 'echeance_modifier' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>Échéances{% if nb_en_retard %}<span class="pastille" title="{{ nb_en_retard }} en retard">{{ nb_en_retard }}</span>{% endif %}</a>{% endif %}
+    {% if perms.echeances.voir_approvisionnement %}<a href="{% url 'approvisionnement' %}" {% if nom == 'approvisionnement' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18v2H3zm1 3h2v6H4zm4 0h2v6H8zm4 0h2v6h-2zm4 0h2v6h-2zM12 2 2 8h20z"/></svg>À approvisionner</a>{% endif %}
+    {% if perms.echeances.importer_echeance %}<a href="{% url 'importer' %}" {% if nom == 'importer' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14v-2H5zM12 2 6 9h4v6h4V9h4z"/></svg>Importer</a>{% endif %}
+    </div>
+    {% if perms.echeances.view_banque or perms.echeances.view_fournisseur or perms.echeances.view_periode %}
+    <div class="nav__groupe">
+      <p class="nav__titre">Configuration de base</p>
+    {% if perms.echeances.view_banque %}<a href="{% url 'banques' %}" {% if nom == 'banques' or nom == 'banque_creer' or nom == 'banque_modifier' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7v2h20V7zM4 11v7h3v-7zm6 0v7h4v-7zm7 0v7h3v-7zM2 20v2h20v-2z"/></svg>Banques</a>{% endif %}
+    {% if perms.echeances.view_fournisseur %}<a href="{% url 'fournisseurs' %}" {% if nom == 'fournisseurs' or nom == 'fournisseur_creer' or nom == 'fournisseur_modifier' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12h-7v-6h-4v6zm4-8h2v-2H7zm8 0h2v-2h-2z"/></svg>Fournisseurs</a>{% endif %}
+    {% if perms.echeances.view_periode %}<a href="{% url 'periodes' %}" {% if nom == 'periodes' or nom == 'periode_creer' or nom == 'periode_modifier' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2zm-2 8h14v10H5z"/></svg>Périodes</a>{% endif %}
+    </div>
+    {% endif %}
+    {% if perms.echeances.view_historicalecheance or perms.auth.view_user or perms.auth.view_group or user.is_staff %}
+    <div class="nav__groupe">
+      <p class="nav__titre">Administration</p>
+    {% if perms.auth.view_user %}<a href="{% url 'utilisateurs' %}" {% if nom == 'utilisateurs' or nom == 'utilisateur_creer' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm8 2c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4zm-8 .1C5.7 13.4 1 14.6 1 17v2h5v-2c0-1.2.6-2.3 1.600-3.200A9 9 0 0 0 8 13.100z"/></svg>Utilisateurs</a>{% endif %}
+    {% if perms.auth.view_group %}<a href="{% url 'roles' %}" {% if nom == 'roles' or nom == 'role_creer' or nom == 'role_modifier' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5.500 3.800 10.700 9 12 5.200-1.300 9-6.500 9-12V5zm-1 15-4-4 1.400-1.400L11 13.200l4.600-4.600L17 10z"/></svg>Rôles</a>{% endif %}
+    {% if perms.echeances.view_historicalecheance %}<a href="{% url 'journal_audit' %}" {% if nom == 'journal_audit' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 2.100 5l-1.400 1.400A9 9 0 1 0 13 3zm-1 5v5l4.300 2.500.8-1.300-3.600-2.100V8z"/></svg>Journal d'audit</a>{% endif %}
+    {% if user.is_staff %}<a href="{% url 'admin:index' %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.9a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1L11 21h4l.4-2.9c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>Paramètres</a>{% endif %}
+    </div>
+    {% endif %}
+  </nav>
+  {% endwith %}
+</aside>
+<div class="contenu-app">
+<div class="barre-haut">
+  <div class="menu-user">
+    <button class="menu-user__bouton" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menu-user">
+      <span class="avatar" aria-hidden="true">{% if user.profil.photo %}<img src="{{ user.profil.photo.url }}" alt="">{% else %}{{ user.get_full_name|default:user.username|slice:":1"|upper }}{% endif %}</span>
+      <span class="menu-user__nom">{{ user.get_full_name|default:user.username }}</span>
+      <svg class="menu-user__fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5z"/></svg>
+    </button>
+    <div class="menu-user__liste" id="menu-user" hidden>
+      <div class="menu-user__id"><strong>{{ user.get_full_name|default:user.username }}</strong><span>{{ user.email|default:"" }}</span></div>
+      <a href="{% url 'profil' %}">Profil</a>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Se déconnecter</button></form>
+    </div>
+  </div>
+</div>
+<main>
+  {% if messages %}<ul class="messages">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block contenu %}{% endblock %}
+</main>
+</div>
+</div>
+<script>
+(function () {
+  var b = document.querySelector('.menu-user__bouton'), m = document.getElementById('menu-user');
+  if (!b || !m) return;
+  function fermer() { m.hidden = true; b.setAttribute('aria-expanded', 'false'); }
+  b.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var ouvrir = m.hidden; m.hidden = !ouvrir; b.setAttribute('aria-expanded', ouvrir);
+  });
+  document.addEventListener('click', function (e) { if (!m.contains(e.target)) fermer(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fermer(); });
+})();
+
+// Aperçu des images choisies dans un champ fichier (photo de profil…).
+document.querySelectorAll('input[type=file][accept^="image"]').forEach(function (input) {
+  var cadre = document.createElement('div');
+  cadre.className = 'apercu'; cadre.hidden = true;
+  var img = document.createElement('img'); img.alt = 'Aperçu de la photo';
+  var info = document.createElement('span'); info.className = 'aide';
+  cadre.appendChild(img); cadre.appendChild(info);
+  input.insertAdjacentElement('afterend', cadre);
+  var url = null;
+  input.addEventListener('change', function () {
+    if (url) { URL.revokeObjectURL(url); url = null; }
+    var f = input.files && input.files[0];
+    if (!f) { cadre.hidden = true; return; }
+    url = URL.createObjectURL(f);
+    img.src = url;
+    info.textContent = f.name + ' (' + Math.round(f.size / 1024) + ' Ko)';
+    cadre.hidden = false;
+  });
+});
+</script>
+{% endblock %}
+</body>
+</html>
