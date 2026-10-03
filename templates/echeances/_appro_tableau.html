@@ -1,0 +1,28 @@
+{% load fcfa %}
+<div class="panneau" style="padding:0">
+<div class="tableau-defile">
+<table class="tableau-doc">
+  <thead><tr>
+    <th>Banque</th><th class="montant">Montant attendu</th>
+    {% for m in mois %}<th class="montant">{% if lien_mois %}<a class="lien-mois" href="{% url 'approvisionnement_mois' m.debut.year m.debut.month %}" title="Voir et imprimer le détail du mois">{{ m.debut|date:"F Y"|capfirst }}</a>{% else %}{{ m.debut|date:"F Y"|capfirst }}{% endif %}{% if forloop.first %}<br><span class="aide">(en cours)</span>{% endif %}</th>{% endfor %}
+  </tr></thead>
+  <tbody>
+  {% for l in lignes %}
+    <tr>
+      <td><strong>{{ l.banque }}</strong>{% if l.banque.numero_compte %}<br><span class="aide">compte {{ l.banque.numero_compte }}</span>{% endif %}</td>
+      <td class="montant"><strong>{{ l.total|fcfa }}</strong></td>
+      {% for v in l.cellules %}<td class="montant">{% if v %}{{ v|fcfa }}{% else %}<span class="cellule-vide">—</span>{% endif %}</td>{% endfor %}
+    </tr>
+  {% empty %}
+    <tr><td colspan="8" class="vide">Aucune échéance ouverte sur la période.</td></tr>
+  {% endfor %}
+  </tbody>
+  {% if lignes %}
+  <tfoot><tr>
+    <td>Total</td><td class="montant">{{ total_general|fcfa }}</td>
+    {% for v in totaux %}<td class="montant">{% if v %}{{ v|fcfa }}{% else %}—{% endif %}</td>{% endfor %}
+  </tr></tfoot>
+  {% endif %}
+</table>
+</div>
+</div>

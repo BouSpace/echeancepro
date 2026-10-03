@@ -1,0 +1,39 @@
+{% load fcfa %}
+{% with p=detail.periode %}
+<div class="titre-page">
+  <div>
+    <h2 style="font-size:1.3rem">{% if numero %}Annexe {{ numero }} — {% endif %}Détail de {{ p.debut|date:"F Y" }}</h2>
+    <p>
+      Échéances ouvertes à couvrir du {{ p.du|date:"d/m/Y" }} au {{ p.fin|date:"d/m/Y" }} :
+      <strong>{{ detail.nb }}</strong> échéance{{ detail.nb|pluralize }}, <strong>{{ detail.total|fcfa }}</strong>.
+    </p>
+  </div>
+</div>
+{% for g in detail.groupes %}
+<div class="panneau" style="padding:0; margin-bottom:1rem">
+<div class="tableau-defile">
+<table class="tableau-doc">
+  <caption style="text-align:left; padding:.6rem .7rem; font-weight:700">
+    {{ g.banque.nom }}{% if g.banque.numero_compte %} <span class="discret" style="font-weight:400">· compte {{ g.banque.numero_compte }}</span>{% endif %}
+  </caption>
+  <thead><tr><th>Échéance</th><th>Fournisseur</th><th>Type</th><th>N° de chèque ou de traite</th><th class="montant">Montant total</th></tr></thead>
+  <tbody>
+  {% for e in g.echeances %}
+    <tr>
+      <td class="num">{{ e.date_echeance|date:"d/m/Y" }}</td>
+      <td>{{ e.fournisseur }}</td>
+      <td>{{ e.get_type_display }}</td>
+      <td>{{ e.reference|default:"—" }}</td>
+      <td class="montant">{{ e.montant_total|fcfa }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+  <tfoot><tr><td colspan="4">Sous-total {{ g.banque }} ({{ g.echeances|length }})</td><td class="montant">{{ g.total|fcfa }}</td></tr></tfoot>
+</table>
+</div>
+</div>
+{% empty %}
+<p class="vide">Aucune échéance ouverte{% if filtre_actif %} pour cette sélection{% else %} sur ce mois{% endif %}.</p>
+{% endfor %}
+{% if detail.groupes %}<p class="doc-total-mois">Total {{ p.debut|date:"F Y" }} : {{ detail.total|fcfa }}</p>{% endif %}
+{% endwith %}

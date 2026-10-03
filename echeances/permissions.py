@@ -51,6 +51,9 @@ CATALOGUE = [
     ("Audit", [
         ("echeances.view_historicalecheance", "Consulter le journal d'audit"),
     ]),
+    ("Entreprise", [
+        ("echeances.change_entreprise", "Modifier les informations de l'entreprise (nom, logo, coordonnées)"),
+    ]),
     ("Alertes", [
         ("echeances.gerer_parametres_alertes", "Gérer le serveur e-mail et les paliers d'alerte"),
     ]),

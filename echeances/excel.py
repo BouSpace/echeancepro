@@ -1,4 +1,5 @@
 """Import et export Excel des échéances."""
+import unicodedata
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
@@ -20,7 +21,21 @@ TYPES = {
     "traite avalisée": Echeance.Type.TRAITE, "traite avalisee": Echeance.Type.TRAITE,
     "traite simple": Echeance.Type.TRAITE,
 }
-STATUTS = {label.lower(): value for value, label in Echeance.Statut.choices}
+S = Echeance.Statut
+# Clés sans accent, en minuscules (voir _normaliser) : « Payée », « payee », « PAYÉ »… sont acceptés.
+STATUTS = {
+    "a venir": S.A_VENIR, "avenir": S.A_VENIR, "ouverte": S.A_VENIR, "ouvert": S.A_VENIR,
+    "payee": S.PAYEE, "paye": S.PAYEE,
+    "impayee": S.IMPAYEE, "impaye": S.IMPAYEE,
+    "renouvelee": S.RENOUVELEE, "renouvele": S.RENOUVELEE,
+    "annulee": S.ANNULEE, "annule": S.ANNULEE,
+}
+
+
+def _normaliser(texte):
+    """Minuscules, sans accents, espaces simplifiés."""
+    sans_accent = "".join(c for c in unicodedata.normalize("NFD", str(texte)) if unicodedata.category(c) != "Mn")
+    return " ".join(sans_accent.lower().split())
 
 ENTETE_FILL = PatternFill("solid", fgColor="0B4DA2")
 ENTETE_FONT = Font(bold=True, color="FFFFFF")
@@ -52,7 +67,7 @@ def modele_vierge():
         ["Fournisseur", "Nom du fournisseur (créé automatiquement si inconnu)"],
         ["Dates", "Format date Excel ou JJ/MM/AAAA"],
         ["Montant, Coût aval", "Nombres entiers en F CFA, sans espace ni symbole"],
-        ["Statut", "Facultatif : À venir (par défaut), Payée, Impayée, Renouvelée, Annulée"],
+        ["Statut", "Facultatif : À venir (par défaut), Payée, Impayée, Renouvelée, Annulée. Les variantes sans accent ou au masculin (payé, annulé…) sont acceptées ; toute autre valeur fait refuser la ligne. Une échéance importée déjà clôturée reçoit sa date d'échéance comme date de clôture."],
     ]:
         aide.append(ligne)
     aide.column_dimensions["A"].width = 22
@@ -129,14 +144,22 @@ def importer(fichier, user=None):
             montant = _nombre(val("Montant"))
             if montant <= 0:
                 raise ValueError("montant nul ou négatif")
-            statut_txt = str(val("Statut") or "").strip().lower()
-            statut = STATUTS.get(statut_txt, Echeance.Statut.A_VENIR)
+            statut_brut = val("Statut")
+            if statut_brut is None or not str(statut_brut).strip():
+                statut = S.A_VENIR
+            else:
+                statut = STATUTS.get(_normaliser(statut_brut))
+                if statut is None:
+                    raise ValueError(
+                        f"statut inconnu « {statut_brut} » (valeurs acceptées : À venir, Payée, Impayée, Renouvelée, Annulée)")
             a_creer.append(dict(
                 banque_nom=banque_nom, fournisseur_nom=fournisseur_nom, type=TYPES[type_txt],
                 reference=str(val("Référence") or "").strip(), date_creation=dc, date_echeance=de,
                 montant=montant, cout_aval=_nombre(val("Coût aval")), statut=statut,
                 commentaire=str(val("Commentaire") or "").strip(),
             ))
+            if statut != S.A_VENIR:  # échéance reprise déjà clôturée : on date la clôture à l'échéance
+                a_creer[-1].update(date_cloture=de, reference_cloture="Statut repris de l'import Excel")
         except (ValueError, InvalidOperation) as exc:
             erreurs.append(f"Ligne {num} : {exc}")
 

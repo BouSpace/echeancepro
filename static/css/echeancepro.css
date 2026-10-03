@@ -246,11 +246,86 @@ textarea { width: 100%; }
   .nav__titre { width: 100%; }
   .menu-user__nom { display: none; }
 }
+/* --- Documents imprimés (état et annexes) ------------------------------------------------ */
+.doc-bloc { display: none; }
+.doc-bloc--visible { display: block; }
+.doc-entete { border-bottom: 3px solid var(--bleu); padding-bottom: .8rem; margin-bottom: 1rem; }
+.doc-entete__haut { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: .8rem; }
+.doc-logo { height: 46px; width: auto; display: block; }
+.doc-logo--entreprise { height: 54px; max-width: 160px; object-fit: contain; }
+.doc-entreprise { display: flex; align-items: center; gap: .9rem; text-align: right; }
+.doc-entreprise__texte { display: grid; font-size: .85rem; color: var(--gris); line-height: 1.35; }
+.doc-entreprise__texte strong { color: var(--encre); font-size: 1rem; }
+.doc-titre h1 { margin: 0; font-size: 1.5rem; }
+.doc-titre p { margin: .15rem 0 0; color: var(--gris); }
+.doc-titre .doc-meta { font-size: .8rem; }
+.doc-entete--compact .doc-logo { height: 32px; }
+.doc-entete--compact .doc-titre h1 { font-size: 1.15rem; }
+
+.doc-kpis { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: .8rem; margin-bottom: 1.2rem; }
+.doc-kpi { border: 1px solid var(--trait); border-radius: var(--rayon); padding: .7rem .9rem; background: var(--papier); display: grid; gap: .1rem; align-content: start; }
+.doc-kpi__libelle { font-size: .78rem; font-weight: 600; color: var(--gris); text-transform: uppercase; letter-spacing: .04em; }
+.doc-kpi__valeur { font: 800 1.25rem/1.25 var(--titres); font-variant-numeric: tabular-nums; }
+.doc-kpi__detail { font-size: .82rem; color: var(--gris); }
+.doc-kpi--fort { border-color: var(--bleu); border-width: 2px; }
+.doc-kpi--alerte { border-color: var(--rouge); }
+.doc-kpi--alerte .doc-kpi__valeur { color: var(--rouge); }
+
+.doc-notes { margin-top: 1rem; font-size: .85rem; color: var(--gris); }
+.doc-notes h3 { font-size: .85rem; margin: 0 0 .25rem; color: var(--encre); }
+.doc-notes ul { margin: 0; padding-left: 1.1rem; }
+.doc-signatures { grid-template-columns: repeat(3, 1fr); gap: 1.2rem; margin-top: 1.4rem; break-inside: avoid; }
+.doc-bloc--visible.doc-signatures { display: grid; }
+.doc-signatures > div { border: 1px solid var(--trait); border-radius: var(--rayon); min-height: 82px; padding: .5rem .7rem; display: grid; align-content: space-between; }
+.doc-signatures span { font-size: .78rem; font-weight: 700; color: var(--gris); text-transform: uppercase; letter-spacing: .04em; }
+.doc-signatures strong { font-size: .9rem; }
+.doc-signatures em { font-size: .75rem; color: var(--gris); }
+.doc-total-mois { text-align: right; font-weight: 800; font-size: 1.05rem; }
+.selection-edition { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+.selection-edition fieldset { border: 0; padding: 0; margin: 0; }
+.selection-edition legend { font: 700 .85rem var(--titres); color: var(--gris); margin-bottom: .4rem; padding: 0; }
+@media (max-width: 900px) { .doc-kpis, .selection-edition { grid-template-columns: 1fr 1fr; } .doc-entete__haut { flex-wrap: wrap; } }
+
+.pour-impression { display: none; }
+.lien-mois { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--gris); }
+.lien-mois:hover { color: var(--bleu); border-bottom-style: solid; }
+.navigation-mois { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1rem; }
+
 @media print {
   .app { display: block; }
-  .barre-haut, .entete, .actions, .filtres, .btn { display: none !important; }
-  body { background: #fff; }
+  .barre-haut, .entete, .actions, .filtres, .btn, .navigation-mois, .sans-impression { display: none !important; }
+  .pour-impression, .doc-bloc { display: block; }
+  .doc-signatures { display: grid; }
+  .doc-entete, .doc-kpi, .tableau-doc th, .tableau-doc tfoot td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .doc-entete { margin-top: 0; }
+  .doc-kpis { grid-template-columns: 1.5fr 1fr 1fr 1fr !important; gap: .5rem; margin-bottom: .7rem; }
+  .doc-entete { padding-bottom: .5rem; margin-bottom: .7rem; }
+  .doc-entete__haut { margin-bottom: .4rem; }
+  .doc-logo { height: 38px; }
+  .doc-logo--entreprise { height: 44px; }
+  .tableau-doc .aide { white-space: nowrap; font-size: .72rem; }
+  .tableau-doc td, .tableau-doc th { padding: .3rem .45rem; }
+  .doc-notes { margin-top: .6rem; font-size: .78rem; }
+  .doc-signatures { margin-top: .8rem; gap: .8rem; }
+  .doc-signatures > div { min-height: 62px; }
+  .doc-kpi { padding: .45rem .6rem; }
+  .doc-kpi__valeur { font-size: 1.05rem; }
+  .doc-total-mois { margin-top: .4rem; }
+  @page { @bottom-left { content: "ÉchéancePro — montants à approvisionner"; font: 8pt "Source Sans 3", Arial, sans-serif; color: #5B6B82; }
+          @bottom-right { content: "Page " counter(page) " / " counter(pages); font: 8pt "Source Sans 3", Arial, sans-serif; color: #5B6B82; } }
+  body { background: #fff; font-size: 11pt; }
+  main { padding: 0; }
+  .panneau { border: 0; padding: 0; }
+  .tableau-defile { overflow: visible; }
+  a, a:visited, .lien-mois { color: inherit; text-decoration: none; border: 0; }
+  table { page-break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th, td { padding: .35rem .5rem; }
+  .saut-page { break-before: page; }
+  .edition { margin-bottom: 1rem; }
 }
+.edition { color: var(--gris); font-size: .9rem; }
 
 /* Tableau d'approvisionnement : beaucoup de colonnes, cellules resserrées */
 .tableau-serre th, .tableau-serre td { padding: .55rem .45rem; font-size: .92rem; }

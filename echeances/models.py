@@ -215,6 +215,29 @@ class EvenementRole(models.Model):
         return f"{self.get_action_display()} du rôle {self.nom}"
 
 
+class Entreprise(models.Model):
+    """Identité de l'entreprise (une seule ligne) : affichée dans l'en-tête des documents imprimés."""
+
+    nom = models.CharField("raison sociale", max_length=200, blank=True)
+    logo = models.ImageField("logo", upload_to="entreprise/", blank=True)
+    adresse = models.TextField("adresse", blank=True)
+    telephone = models.CharField("téléphone", max_length=60, blank=True)
+    email = models.EmailField("e-mail", blank=True)
+
+    history = HistoricalRecords(verbose_name="historique")
+
+    class Meta:
+        verbose_name = "entreprise"
+        verbose_name_plural = "entreprise"
+
+    def __str__(self):
+        return self.nom or "Entreprise"
+
+    @classmethod
+    def charger(cls):
+        return cls.objects.get_or_create(pk=1)[0]
+
+
 class ParametresAlertes(models.Model):
     """Réglages d'envoi des alertes (une seule ligne) : serveur e-mail et paliers d'alerte."""
 

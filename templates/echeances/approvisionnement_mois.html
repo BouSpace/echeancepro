@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load fcfa %}
+{% block titre %}Détail {{ detail.periode.debut|date:"F Y" }}{% endblock %}
+{% block tete %}<style media="print">@page { size: A4 portrait; margin: 12mm 12mm 16mm; }</style>{% endblock %}
+{% block contenu %}
+<div class="titre-page sans-impression">
+  <div><h1>Détail du mois</h1><p>Document d'accompagnement de l'état des montants à approvisionner.</p></div>
+  <div class="actions" style="margin:0">
+    <a class="btn btn--clair" href="{% url 'approvisionnement' %}">← Retour à l'état</a>
+    <button class="btn" type="button" onclick="window.print()">Imprimer ce détail</button>
+  </div>
+</div>
+<form class="filtres sans-impression" method="get">
+  <div>
+    <label for="banque">Banque</label>
+    <select id="banque" name="banque">
+      <option value="">Toutes les banques</option>
+      {% for b in liste_banques %}<option value="{{ b.pk }}" {% if banque_id == b.pk|stringformat:"s" %}selected{% endif %}>{{ b }}</option>{% endfor %}
+    </select>
+  </div>
+  <button class="btn" type="submit">Filtrer</button>
+  <a class="btn btn--clair" href="{% url 'approvisionnement_mois' annee mois_num %}">Effacer</a>
+</form>
+{% include "echeances/_doc_entete.html" with titre="Détail des montants à approvisionner" sous_titre="Document d'accompagnement de l'état des montants à approvisionner" %}
+{% include "echeances/_appro_mois.html" with filtre_actif=banque_id %}
+<div class="navigation-mois">
+  <a class="btn btn--clair" href="{% url 'approvisionnement_mois' mois_precedent.year mois_precedent.month %}">← {{ mois_precedent|date:"F Y"|capfirst }}</a>
+  <a class="btn btn--clair" href="{% url 'approvisionnement_mois' mois_suivant.year mois_suivant.month %}">{{ mois_suivant|date:"F Y"|capfirst }} →</a>
+</div>
+{% endblock %}

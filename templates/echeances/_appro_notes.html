@@ -1,0 +1,15 @@
+{% load fcfa %}
+<div class="doc-notes">
+  <h3>Notes</h3>
+  <ul>
+    <li>Montants en F CFA, coût d'aval et frais inclus. Seules les échéances <strong>ouvertes</strong> (non clôturées) sont comptées.</li>
+    <li>Le mois en cours ne compte que les échéances à partir du {{ periode_debut|date:"d/m/Y" }}.{% if total_retard %} Les échéances en retard ({{ total_retard|fcfa }}) ne sont pas comprises dans ce tableau.{% endif %}</li>
+    <li>Le solde des comptes n'est pas suivi par ÉchéancePro : comparez ces montants aux soldes bancaires.</li>
+    {% if annexes %}<li>Annexes jointes : {% for a in annexes %}n° {{ a.numero }} — {{ a.detail.periode.debut|date:"F Y" }} ({{ a.detail.nb }} échéance{{ a.detail.nb|pluralize }}){% if not forloop.last %} ; {% endif %}{% endfor %}.</li>{% endif %}
+  </ul>
+</div>
+<div class="doc-bloc {% if apercu %}doc-bloc--visible{% endif %} doc-signatures">
+  <div><span>Établi par</span><strong>{{ user.get_full_name|default:user.username }}</strong><em>Date et visa</em></div>
+  <div><span>Vérifié par</span><em>Date et visa</em></div>
+  <div><span>Approuvé par</span><em>Date et visa</em></div>
+</div>

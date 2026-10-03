@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group
 from django.utils import timezone
 
 from . import permissions as droits
-from .models import Banque, Echeance, EvenementRole, Fournisseur, ParametresAlertes, Periode, Profil
+from .models import Banque, Echeance, Entreprise, EvenementRole, Fournisseur, ParametresAlertes, Periode, Profil
 
 
 class DateInput(forms.DateInput):
@@ -243,7 +243,7 @@ class PeriodeForm(forms.ModelForm):
 
 class FiltreAuditForm(forms.Form):
     OBJETS = [("", "Tous"), ("echeance", "Échéances"), ("banque", "Banques"),
-              ("fournisseur", "Fournisseurs"), ("periode", "Périodes"), ("role", "Rôles"), ("parametres", "Alertes e-mail")]
+              ("fournisseur", "Fournisseurs"), ("periode", "Périodes"), ("role", "Rôles"), ("parametres", "Alertes e-mail"), ("entreprise", "Entreprise")]
     ACTIONS = [("", "Toutes"), ("+", "Créations"), ("~", "Modifications"), ("-", "Suppressions")]
 
     objet = forms.ChoiceField(label="Objet", choices=OBJETS, required=False)
@@ -356,3 +356,10 @@ class ParametresAlertesForm(forms.ModelForm):
         if commit:
             p.save()
         return p
+
+
+class EntrepriseForm(forms.ModelForm):
+    class Meta:
+        model = Entreprise
+        fields = ["nom", "logo", "adresse", "telephone", "email"]
+        widgets = {"adresse": forms.Textarea(attrs={"rows": 3})}

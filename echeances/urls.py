@@ -5,6 +5,8 @@ from . import views
 urlpatterns = [
     path("", views.tableau_de_bord, name="tableau_de_bord"),
     path("approvisionnement/", views.approvisionnement, name="approvisionnement"),
+    path("approvisionnement/edition/", views.approvisionnement_complet, name="approvisionnement_complet"),
+    path("approvisionnement/<int:annee>/<int:mois>/", views.approvisionnement_mois, name="approvisionnement_mois"),
     path("echeances/", views.liste, name="liste"),
     path("echeances/export/", views.export_excel, name="export_excel"),
     path("echeances/nouvelle/", views.EcheanceCreate.as_view(), name="echeance_creer"),
@@ -16,6 +18,7 @@ urlpatterns = [
     path("echeances/<int:pk>/rouvrir/", views.rouvrir, name="echeance_rouvrir"),
     path("profil/", views.profil, name="profil"),
     path("audit/", views.journal_audit, name="journal_audit"),
+    path("entreprise/", views.entreprise, name="entreprise"),
     path("alertes/", views.parametres_alertes, name="parametres_alertes"),
     path("roles/", views.roles, name="roles"),
     path("roles/nouveau/", views.RoleCreate.as_view(), name="role_creer"),

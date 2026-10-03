@@ -1,0 +1,22 @@
+{% load static %}
+<header class="doc-bloc {% if apercu %}doc-bloc--visible{% endif %} doc-entete {% if compact %}doc-entete--compact{% endif %}">
+  <div class="doc-entete__haut">
+    <img class="doc-logo" src="{% static 'img/logo-entete.png' %}" alt="ÉchéancePro">
+    {% if entreprise.logo or entreprise.nom or entreprise.adresse or entreprise.telephone or entreprise.email %}
+    <div class="doc-entreprise">
+      {% if entreprise.logo %}<img class="doc-logo doc-logo--entreprise" src="{{ entreprise.logo.url }}" alt="">{% endif %}
+      <div class="doc-entreprise__texte">
+        {% if entreprise.nom %}<strong>{{ entreprise.nom }}</strong>{% endif %}
+        {% if entreprise.adresse %}<span>{{ entreprise.adresse|linebreaksbr }}</span>{% endif %}
+        {% if entreprise.telephone or entreprise.email %}<span>{{ entreprise.telephone }}{% if entreprise.telephone and entreprise.email %} · {% endif %}{{ entreprise.email }}</span>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="doc-titre">
+    <h1>{{ titre }}</h1>
+    {% if situation %}<p>Situation au {{ today|date:"d/m/Y" }}</p>{% endif %}
+    {% if sous_titre %}<p>{{ sous_titre }}</p>{% endif %}
+    <p class="doc-meta">Réf. {{ reference }} · Édité le {% now "d/m/Y à H:i" %} par {{ user.get_full_name|default:user.username }}</p>
+  </div>
+</header>

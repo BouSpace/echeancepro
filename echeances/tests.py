@@ -148,3 +148,85 @@ class ParametresAlertesTests(Base):
         })
         self.assertEqual(r.status_code, 200)
         self.assertFalse(ParametresAlertes.charger().utiliser)
+
+
+class EditionAnnexesTests(Base):
+    def setUp(self):
+        self.client.force_login(self.gest)
+        self.autre = Banque.objects.create(nom="BSIC", code="BSIC")
+        self.creer(5)  # banque CORIS, ce mois-ci ou le suivant
+        Echeance.objects.create(
+            banque=self.autre, fournisseur=self.fournisseur, type="TRAITE",
+            date_creation=self.today, date_echeance=self.today + timedelta(days=6), montant=50,
+        )
+
+    def annexes(self, **params):
+        r = self.client.get(reverse("approvisionnement_complet"), params)
+        self.assertEqual(r.status_code, 200)
+        return r.context["annexes"], r.context["inclure_etat"]
+
+    def test_par_defaut_tout_est_imprime(self):
+        annexes, etat = self.annexes()
+        self.assertTrue(etat)
+        self.assertGreaterEqual(len(annexes), 1)
+        total = sum(g["total"] for a in annexes for g in a["detail"]["groupes"])
+        self.assertEqual(total, 100_000_050)
+
+    def test_filtre_par_banque(self):
+        annexes, _ = self.annexes(f=1, etat=1, mois=[f"{self.today + timedelta(days=5):%Y-%m}",
+                                                      f"{self.today + timedelta(days=6):%Y-%m}"], banque=[self.autre.pk])
+        noms = {g["banque"].nom for a in annexes for g in a["detail"]["groupes"]}
+        self.assertEqual(noms, {"BSIC"})
+
+    def test_sans_etat_ni_mois(self):
+        annexes, etat = self.annexes(f=1)
+        self.assertEqual(annexes, [])
+        self.assertFalse(etat)
+
+    def test_detail_mois_filtre_par_banque(self):
+        d = self.today + timedelta(days=5)
+        r = self.client.get(reverse("approvisionnement_mois", args=[d.year, d.month]), {"banque": self.autre.pk})
+        self.assertEqual({g["banque"].nom for g in r.context["detail"]["groupes"]}, {"BSIC"})
+        self.assertEqual(self.client.get(reverse("approvisionnement_mois", args=[2026, 13])).status_code, 404)
+
+    def test_page_entreprise_reservee(self):
+        self.assertEqual(self.client.get(reverse("entreprise")).status_code, 403)
+        admin = User.objects.create_superuser("adm", "adm@ex.com", "motdepasse-123")
+        self.client.force_login(admin)
+        self.client.post(reverse("entreprise"), {"nom": "Ma Société", "adresse": "Ouaga", "telephone": "1", "email": "a@b.co"})
+        r = self.client.get(reverse("approvisionnement"))
+        self.assertContains(r, "Ma Société")
+
+
+class ImportStatutsTests(Base):
+    def fichier(self, *statuts):
+        from openpyxl import Workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.append(excel.COLONNES)
+        for i, st in enumerate(statuts):
+            ws.append(["CORIS", "Chèque", f"F{i}", "", self.today, self.today + timedelta(days=10), 1000, 0, st, ""])
+        buf = BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        return buf
+
+    def test_variantes_acceptees(self):
+        nb, erreurs = excel.importer(self.fichier("Payée", "payee", "PAYÉ", "Annulé", " à venir ", None, "Impayee", "Renouvelée"))
+        self.assertEqual((nb, erreurs), (8, []))
+        statuts = list(Echeance.objects.order_by("pk").values_list("statut", flat=True))
+        self.assertEqual(statuts, ["PAYEE", "PAYEE", "PAYEE", "ANNULEE", "A_VENIR", "A_VENIR", "IMPAYEE", "RENOUVELEE"])
+
+    def test_statut_inconnu_refuse_tout(self):
+        nb, erreurs = excel.importer(self.fichier("Payée", "Réglé"))
+        self.assertEqual(nb, 0)
+        self.assertEqual(Echeance.objects.count(), 0)
+        self.assertIn("Ligne 3", erreurs[0])
+        self.assertIn("statut inconnu", erreurs[0])
+
+    def test_echeance_cloturee_a_une_date_de_cloture(self):
+        excel.importer(self.fichier("Payée", "À venir"))
+        payee, ouverte = Echeance.objects.order_by("pk")
+        self.assertEqual(payee.date_cloture, payee.date_echeance)
+        self.assertTrue(payee.reference_cloture)
+        self.assertIsNone(ouverte.date_cloture)

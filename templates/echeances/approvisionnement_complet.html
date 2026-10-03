@@ -1,0 +1,62 @@
+{% extends "base.html" %}{% load fcfa %}
+{% block titre %}Édition avec annexes — À approvisionner{% endblock %}
+{% block tete %}<style media="print">@page { size: A4 landscape; margin: 12mm 12mm 16mm; }</style>{% endblock %}
+{% block contenu %}
+<div class="titre-page sans-impression">
+  <div>
+    <h1>Édition avec annexes</h1>
+    <p>Choisissez ce qui sera imprimé : l'état récapitulatif et, en annexe, le détail des mois et des banques voulus. L'aperçu ci-dessous est ce qui sera imprimé.</p>
+  </div>
+  <div class="actions" style="margin:0">
+    <a class="btn btn--clair" href="{% url 'approvisionnement' %}">← Retour à l'état</a>
+    <button class="btn" type="button" onclick="window.print()">Imprimer cette sélection</button>
+  </div>
+</div>
+
+<form class="panneau sans-impression" method="get" style="margin-bottom:1.5rem">
+  <input type="hidden" name="f" value="1">
+  <div class="selection-edition">
+    <fieldset>
+      <legend>Mois à joindre en annexe</legend>
+      {% for m in disponibles %}
+      <label class="case-droit"><input type="checkbox" name="mois" value="{{ m.cle }}" {% if m.cle in cles %}checked{% endif %}>
+        {{ m.debut|date:"F Y"|capfirst }} <span class="discret">· {{ m.nb }} échéance{{ m.nb|pluralize }} · {{ m.total|millions }}</span></label>
+      {% empty %}<p class="discret">Aucun mois ne compte d'échéances.</p>{% endfor %}
+    </fieldset>
+    <fieldset>
+      <legend>Banques</legend>
+      {% for b in banques %}
+      <label class="case-droit"><input type="checkbox" name="banque" value="{{ b.pk }}" {% if b.pk in ids %}checked{% endif %}> {{ b }}</label>
+      {% empty %}<p class="discret">Aucune banque.</p>{% endfor %}
+    </fieldset>
+    <fieldset>
+      <legend>État récapitulatif</legend>
+      <label class="case-droit"><input type="checkbox" name="etat" value="1" {% if inclure_etat %}checked{% endif %}> Inclure l'état (tableau et chiffres clés)</label>
+    </fieldset>
+  </div>
+  <div class="actions" style="margin-top:1rem">
+    <button class="btn" type="submit">Appliquer la sélection</button>
+    <a class="btn btn--clair" href="{% url 'approvisionnement_complet' %}">Tout sélectionner</a>
+  </div>
+</form>
+
+{% if not inclure_etat and not annexes %}
+<p class="vide sans-impression">Rien à imprimer : cochez l'état ou au moins un mois et une banque.</p>
+{% endif %}
+
+{% if inclure_etat %}
+<section>
+  {% include "echeances/_doc_entete.html" with titre="État des montants à approvisionner" situation=True apercu=True %}
+  {% include "echeances/_appro_kpis.html" %}
+  {% include "echeances/_appro_tableau.html" %}
+  {% include "echeances/_appro_notes.html" with apercu=True %}
+</section>
+{% endif %}
+
+{% for a in annexes %}
+<section class="{% if not forloop.first or inclure_etat %}saut-page{% endif %}" style="margin-top:2rem">
+  {% include "echeances/_doc_entete.html" with titre="Annexe à l'état des montants à approvisionner" compact=True apercu=True %}
+  {% include "echeances/_appro_mois.html" with detail=a.detail numero=a.numero filtre_actif=True %}
+</section>
+{% endfor %}
+{% endblock %}

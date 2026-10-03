@@ -1,0 +1,25 @@
+{% load fcfa %}
+<section class="doc-kpis" aria-label="Chiffres clés">
+  <div class="doc-kpi doc-kpi--fort">
+    <span class="doc-kpi__libelle">Total à approvisionner</span>
+    <span class="doc-kpi__valeur">{{ total_general|fcfa }}</span>
+    <span class="doc-kpi__detail">du {{ periode_debut|date:"d/m/Y" }} au {{ periode_fin|date:"d/m/Y" }}</span>
+  </div>
+  <div class="doc-kpi">
+    <span class="doc-kpi__libelle">Échéances concernées</span>
+    <span class="doc-kpi__valeur">{{ nb_echeances }}</span>
+    <span class="doc-kpi__detail">{% for t in par_type %}{{ t.nb }} {{ t.libelle|lower }}{{ t.nb|pluralize }}{% if not forloop.last %} · {% endif %}{% endfor %}</span>
+  </div>
+  <div class="doc-kpi">
+    <span class="doc-kpi__libelle">Mois le plus chargé</span>
+    {% if plus_charge %}
+    <span class="doc-kpi__valeur">{{ plus_charge.mois|date:"F Y"|capfirst }}</span>
+    <span class="doc-kpi__detail">{{ plus_charge.total|fcfa }}</span>
+    {% else %}<span class="doc-kpi__valeur">—</span>{% endif %}
+  </div>
+  <div class="doc-kpi {% if total_retard %}doc-kpi--alerte{% endif %}">
+    <span class="doc-kpi__libelle">En retard (non comptées)</span>
+    <span class="doc-kpi__valeur">{{ total_retard|fcfa }}</span>
+    <span class="doc-kpi__detail">{% if total_retard %}à régulariser{% else %}aucune échéance dépassée{% endif %}</span>
+  </div>
+</section>

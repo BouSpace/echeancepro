@@ -16,8 +16,8 @@ from django.db.models import Count, ProtectedError
 from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
 
 from . import excel
-from .forms import FiltreAuditForm, ParametresAlertesForm, RoleForm, PeriodeForm, BanqueForm, ClotureForm, EcheanceForm, FournisseurForm, FiltreForm, ImportForm, FiltreUtilisateurForm, ProfilForm, UtilisateurModifierForm, UtilisateurForm
-from .models import Banque, Echeance, EvenementRole, Fournisseur, ParametresAlertes, Periode
+from .forms import EntrepriseForm, FiltreAuditForm, ParametresAlertesForm, RoleForm, PeriodeForm, BanqueForm, ClotureForm, EcheanceForm, FournisseurForm, FiltreForm, ImportForm, FiltreUtilisateurForm, ProfilForm, UtilisateurModifierForm, UtilisateurForm
+from .models import Banque, Echeance, Entreprise, EvenementRole, Fournisseur, ParametresAlertes, Periode
 
 
 def _total(qs):
@@ -98,31 +98,130 @@ def _debut_mois(d, decalage=0):
     return d.replace(year=n // 12, month=n % 12 + 1, day=1)
 
 
-@login_required
-@permission_required("echeances.voir_approvisionnement", raise_exception=True)
-def approvisionnement(request):
-    """Total des échéances à couvrir par banque, sur le mois en cours et les 5 suivants."""
-    today = timezone.localdate()
-    mois = []
-    for i in range(NB_MOIS_APPROVISIONNEMENT):
-        debut = _debut_mois(today, i)
-        fin = _debut_mois(today, i + 1) - timedelta(days=1)
-        mois.append({"debut": debut, "fin": fin, "du": max(debut, today)})
-    ouvertes = Echeance.objects.ouvertes()
+def _periode_mois(debut, today):
+    """Un mois à couvrir : le mois en cours ne compte qu'à partir d'aujourd'hui."""
+    fin = _debut_mois(debut, 1) - timedelta(days=1)
+    return {"debut": debut, "fin": fin, "du": max(debut, today)}
 
+
+def _etat_approvisionnement(today):
+    """Tableau banque × 6 mois (lignes, totaux) et chiffres clés de l'état."""
+    mois = [_periode_mois(_debut_mois(today, i), today) for i in range(NB_MOIS_APPROVISIONNEMENT)]
+    ouvertes = Echeance.objects.ouvertes()
     lignes = []
     for b in Banque.objects.filter(actif=True):
         qs = ouvertes.filter(banque=b)
         cellules = [_total(qs.entre(m["du"], m["fin"])) for m in mois]
         if any(cellules):
             lignes.append({"banque": b, "cellules": cellules, "total": sum(cellules)})
+    totaux = [sum(l["cellules"][i] for l in lignes) for i in range(len(mois))]
 
-    return render(request, "echeances/approvisionnement.html", {
-        "mois": mois,
-        "lignes": lignes,
-        "totaux": [sum(l["cellules"][i] for l in lignes) for i in range(len(mois))],
+    fenetre = ouvertes.filter(banque__actif=True).entre(mois[0]["du"], mois[-1]["fin"])
+    par_type = []
+    for valeur, libelle in Echeance.Type.choices:
+        qs = fenetre.filter(type=valeur)
+        par_type.append({"libelle": libelle, "nb": qs.count(), "total": _total(qs)})
+    plus_charge = None
+    if any(totaux):
+        total_max, periode_max = max(zip(totaux, mois), key=lambda x: x[0])
+        plus_charge = {"mois": periode_max["debut"], "total": total_max}
+    return {
+        "mois": mois, "lignes": lignes, "totaux": totaux,
         "total_general": sum(l["total"] for l in lignes),
         "total_retard": _total(ouvertes.filter(date_echeance__lt=today)),
+        "nb_echeances": sum(t["nb"] for t in par_type), "par_type": par_type, "plus_charge": plus_charge,
+        "periode_debut": mois[0]["du"], "periode_fin": mois[-1]["fin"],
+    }
+
+
+def _detail_mois(periode, banques=None):
+    """Échéances ouvertes d'un mois, regroupées par banque, avec sous-totaux (banques : ids à retenir)."""
+    qs = (Echeance.objects.ouvertes().entre(periode["du"], periode["fin"])
+          .select_related("banque", "fournisseur").order_by("banque__nom", "date_echeance", "pk"))
+    if banques:
+        qs = qs.filter(banque_id__in=banques)
+    groupes = {}
+    for e in qs:
+        g = groupes.setdefault(e.banque_id, {"banque": e.banque, "echeances": [], "total": 0})
+        g["echeances"].append(e)
+        g["total"] += e.montant_total
+    liste = list(groupes.values())
+    return {
+        "periode": periode, "groupes": liste,
+        "nb": sum(len(g["echeances"]) for g in liste), "total": sum(g["total"] for g in liste),
+    }
+
+
+def _contexte_document(today):
+    """Éléments communs aux documents imprimés : identité de l'entreprise et référence."""
+    return {"entreprise": Entreprise.charger(), "reference": f"AP-{today:%Y%m%d}", "today": today}
+
+
+@login_required
+@permission_required("echeances.voir_approvisionnement", raise_exception=True)
+def approvisionnement(request):
+    today = timezone.localdate()
+    return render(request, "echeances/approvisionnement.html",
+                  {**_etat_approvisionnement(today), **_contexte_document(today)})
+
+
+@login_required
+@permission_required("echeances.voir_approvisionnement", raise_exception=True)
+def approvisionnement_mois(request, annee, mois):
+    """Détail d'un mois (à imprimer pour accompagner l'état), filtrable par banque."""
+    from datetime import date
+    from django.http import Http404
+
+    if not (1 <= mois <= 12 and 2000 <= annee <= 2100):
+        raise Http404
+    today = timezone.localdate()
+    debut = date(annee, mois, 1)
+    banque_id = request.GET.get("banque", "")
+    banques = [int(banque_id)] if banque_id.isdigit() else None
+    return render(request, "echeances/approvisionnement_mois.html", {
+        **_contexte_document(today),
+        "detail": _detail_mois(_periode_mois(debut, today), banques),
+        "mois_precedent": _debut_mois(debut, -1), "mois_suivant": _debut_mois(debut, 1),
+        "liste_banques": Banque.objects.filter(actif=True), "banque_id": banque_id,
+        "annee": annee, "mois_num": mois,
+    })
+
+
+@login_required
+@permission_required("echeances.voir_approvisionnement", raise_exception=True)
+def approvisionnement_complet(request):
+    """Édition complète : l'état, puis des annexes (un mois par annexe), au choix de l'utilisateur."""
+    today = timezone.localdate()
+    etat = _etat_approvisionnement(today)
+
+    # Mois proposés en annexe : ceux qui comptent des échéances.
+    disponibles, banques_par_id = [], {}
+    for m in etat["mois"]:
+        d = _detail_mois(m)
+        if d["nb"]:
+            disponibles.append({"cle": f"{m['debut']:%Y-%m}", "debut": m["debut"], "periode": m, "nb": d["nb"], "total": d["total"]})
+            banques_par_id.update({g["banque"].pk: g["banque"] for g in d["groupes"]})
+    banques = sorted(banques_par_id.values(), key=lambda b: b.nom)
+
+    if request.GET.get("f"):  # formulaire envoyé : on respecte exactement les cases cochées
+        cles = set(request.GET.getlist("mois"))
+        ids = {int(x) for x in request.GET.getlist("banque") if x.isdigit()}
+        inclure_etat = request.GET.get("etat") == "1"
+    else:  # première ouverture : tout est coché
+        cles = {m["cle"] for m in disponibles}
+        ids = {b.pk for b in banques}
+        inclure_etat = True
+
+    annexes = []
+    for m in disponibles:
+        if m["cle"] in cles and ids:
+            d = _detail_mois(m["periode"], ids)
+            if d["nb"]:
+                annexes.append({"numero": len(annexes) + 1, "detail": d})
+    return render(request, "echeances/approvisionnement_complet.html", {
+        **etat, **_contexte_document(today),
+        "disponibles": disponibles, "banques": banques, "cles": cles, "ids": ids,
+        "inclure_etat": inclure_etat, "annexes": annexes,
     })
 
 
@@ -572,6 +671,7 @@ AUDIT_OBJETS = {
     "fournisseur": ("Fournisseur", Fournisseur, "fournisseur_detail"),
     "periode": ("Période", Periode, None),
     "parametres": ("Alertes e-mail", ParametresAlertes, None),
+    "entreprise": ("Entreprise", Entreprise, None),
 }
 AUDIT_ACTIONS = {"+": ("Création", "statut--PAYEE"), "~": ("Modification", "statut--A_VENIR"), "-": ("Suppression", "statut--IMPAYEE")}
 AUDIT_IGNORES = ["modifie_le", "cree_le"]
@@ -580,6 +680,8 @@ AUDIT_IGNORES = ["modifie_le", "cree_le"]
 def _audit_libelle(cle, h):
     if cle == "parametres":
         return "Serveur e-mail et paliers d'alerte"
+    if cle == "entreprise":
+        return "Informations de l'entreprise"
     if cle == "echeance":
         return f"{h.get_type_display()} du {h.date_echeance:%d/%m/%Y} — {int(h.montant):,} F CFA".replace(",", "\u202f")
     return getattr(h, "libelle", None) or h.nom
@@ -610,7 +712,7 @@ def _audit_changements(h):
         champ = h.instance_type._meta.get_field(c.field)
         nom = str(champ.verbose_name)
         nom = nom[:1].upper() + nom[1:]
-        if champ.is_relation or c.field == "piece_jointe":
+        if champ.is_relation or c.field in ("piece_jointe", "logo"):
             out.append(f"{nom} modifié(e)")
         else:
             out.append(f"{nom} : {_audit_valeur(champ, c.old)} → {_audit_valeur(champ, c.new)}")
@@ -771,3 +873,17 @@ def parametres_alertes(request):
             messages.success(request, "Paramètres enregistrés.")
             return redirect("parametres_alertes")
     return render(request, "echeances/parametres_alertes.html", {"form": form, "parametres": p})
+
+
+# --- Entreprise : nom, logo et coordonnées des documents imprimés ----------------------------
+
+@login_required
+@permission_required("echeances.change_entreprise", raise_exception=True)
+def entreprise(request):
+    e = Entreprise.charger()
+    form = EntrepriseForm(request.POST or None, request.FILES or None, instance=e)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Informations de l'entreprise enregistrées.")
+        return redirect("entreprise")
+    return render(request, "echeances/entreprise.html", {"form": form, "entreprise": e})

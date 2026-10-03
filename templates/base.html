@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/echeancepro.css' %}">
+  {% block tete %}{% endblock %}
 </head>
 <body>
 {% block corps %}
@@ -28,13 +29,15 @@
     {% if perms.echeances.importer_echeance %}<a href="{% url 'importer' %}" {% if nom == 'importer' %}aria-current="page"{% endif %}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14v-2H5zM12 2 6 9h4v6h4V9h4z"/></svg>Importer</a>{% endif %}
     </div>
-    {% if perms.echeances.view_banque or perms.echeances.view_fournisseur or perms.echeances.view_periode %}
+    {% if perms.echeances.view_banque or perms.echeances.view_fournisseur or perms.echeances.view_periode or perms.echeances.change_entreprise %}
     <div class="nav__groupe">
       <p class="nav__titre">Configuration de base</p>
     {% if perms.echeances.view_banque %}<a href="{% url 'banques' %}" {% if nom == 'banques' or nom == 'banque_creer' or nom == 'banque_modifier' %}aria-current="page"{% endif %}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7v2h20V7zM4 11v7h3v-7zm6 0v7h4v-7zm7 0v7h3v-7zM2 20v2h20v-2z"/></svg>Banques</a>{% endif %}
     {% if perms.echeances.view_fournisseur %}<a href="{% url 'fournisseurs' %}" {% if nom == 'fournisseurs' or nom == 'fournisseur_creer' or nom == 'fournisseur_modifier' %}aria-current="page"{% endif %}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12h-7v-6h-4v6zm4-8h2v-2H7zm8 0h2v-2h-2z"/></svg>Fournisseurs</a>{% endif %}
+    {% if perms.echeances.change_entreprise %}<a href="{% url 'entreprise' %}" {% if nom == 'entreprise' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7V3H2v18h20V7zM6 19H4v-2h2zm0-4H4v-2h2zm0-4H4V9h2zm0-4H4V5h2zm4 12H8v-2h2zm0-4H8v-2h2zm0-4H8V9h2zm0-4H8V5h2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8zm-2-8h-2v2h2zm0 4h-2v2h2z"/></svg>Entreprise</a>{% endif %}
     {% if perms.echeances.view_periode %}<a href="{% url 'periodes' %}" {% if nom == 'periodes' or nom == 'periode_creer' or nom == 'periode_modifier' %}aria-current="page"{% endif %}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2zm-2 8h14v10H5z"/></svg>Périodes</a>{% endif %}
     </div>
