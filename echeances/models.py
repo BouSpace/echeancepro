@@ -215,6 +215,62 @@ class EvenementRole(models.Model):
         return f"{self.get_action_display()} du rôle {self.nom}"
 
 
+class ParametresAlertes(models.Model):
+    """Réglages d'envoi des alertes (une seule ligne) : serveur e-mail et paliers d'alerte."""
+
+    SECURITES = [("tls", "STARTTLS (port 587)"), ("ssl", "SSL/TLS (port 465)"), ("aucune", "Aucun (déconseillé)")]
+
+    utiliser = models.BooleanField(
+        "utiliser ces réglages", default=False,
+        help_text="Décoché, le logiciel utilise les réglages e-mail du serveur (fichier .env).",
+    )
+    hote = models.CharField("serveur SMTP", max_length=200, blank=True, help_text="Ex. : smtp.votre-domaine.com")
+    port = models.PositiveIntegerField("port", default=587)
+    securite = models.CharField("chiffrement", max_length=10, choices=SECURITES, default="tls")
+    utilisateur = models.CharField("identifiant", max_length=200, blank=True)
+    mot_de_passe_chiffre = models.TextField(blank=True)
+    mot_de_passe_maj = models.DateTimeField("mot de passe mis à jour le", null=True, blank=True)
+    expediteur_nom = models.CharField("nom de l'expéditeur", max_length=100, default="ÉchéancePro")
+    expediteur_adresse = models.EmailField("adresse de l'expéditeur", blank=True)
+    paliers = models.CharField(
+        "paliers d'alerte (jours avant l'échéance)", max_length=60, default="15,7,3",
+        help_text="Jours séparés par des virgules, ex. : 15,7,3. Les échéances du jour et en retard sont toujours signalées.",
+    )
+
+    history = HistoricalRecords(excluded_fields=["mot_de_passe_chiffre"], verbose_name="historique")
+
+    class Meta:
+        verbose_name = "paramètres d'alertes"
+        verbose_name_plural = "paramètres d'alertes"
+        permissions = [("gerer_parametres_alertes", "Peut gérer les paramètres e-mail et les alertes")]
+
+    def __str__(self):
+        return "Paramètres d'alertes"
+
+    @classmethod
+    def charger(cls):
+        return cls.objects.get_or_create(pk=1)[0]
+
+    @property
+    def utilisable(self):
+        return self.utiliser and bool(self.hote) and bool(self.expediteur_adresse)
+
+    def mot_de_passe(self):
+        from .mail import dechiffrer
+        return dechiffrer(self.mot_de_passe_chiffre)
+
+    @property
+    def mot_de_passe_illisible(self):
+        return bool(self.mot_de_passe_chiffre) and self.mot_de_passe() is None
+
+    def liste_paliers(self):
+        try:
+            jours = {int(x) for x in self.paliers.split(",") if x.strip()}
+        except ValueError:
+            jours = set()
+        return sorted((j for j in jours if j > 0), reverse=True) or [15, 7, 3]
+
+
 class EnvoiRecap(models.Model):
     """Trace des récapitulatifs envoyés, pour ne jamais envoyer deux fois le même jour."""
 

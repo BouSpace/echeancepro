@@ -16,6 +16,7 @@ urlpatterns = [
     path("echeances/<int:pk>/rouvrir/", views.rouvrir, name="echeance_rouvrir"),
     path("profil/", views.profil, name="profil"),
     path("audit/", views.journal_audit, name="journal_audit"),
+    path("alertes/", views.parametres_alertes, name="parametres_alertes"),
     path("roles/", views.roles, name="roles"),
     path("roles/nouveau/", views.RoleCreate.as_view(), name="role_creer"),
     path("roles/<int:pk>/modifier/", views.RoleUpdate.as_view(), name="role_modifier"),

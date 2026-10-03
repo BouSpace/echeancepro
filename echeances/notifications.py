@@ -17,6 +17,7 @@ from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+from . import mail
 from .models import Echeance, EnvoiRecap, SmsEnvoye
 
 log = logging.getLogger("echeances")
@@ -34,9 +35,7 @@ def construire_recap(jour=None):
     jour = jour or timezone.localdate()
     ouvertes = Echeance.objects.ouvertes().select_related("banque", "fournisseur")
     paliers = []
-    for p in sorted(settings.ALERTE_PALIERS, reverse=True):
-        if p == 0:
-            continue
+    for p in mail.paliers():
         lst = list(ouvertes.filter(date_echeance=jour + timedelta(days=p)))
         if lst:
             paliers.append({"jours": p, "echeances": lst, "total": sum(e.montant_total for e in lst)})
@@ -68,10 +67,11 @@ def envoyer_recap(jour=None, force=False, stdout=None):
     texte = render_to_string("emails/recap.txt", ctx)
     html = render_to_string("emails/recap.html", ctx)
     envoyes = 0
+    connexion, de = mail.connexion(), mail.expediteur()
     for user in destinataires():
         if not force and EnvoiRecap.objects.filter(date=ctx["jour"], destinataire=user.email, canal="email").exists():
             continue
-        msg = EmailMultiAlternatives(sujet, texte, settings.DEFAULT_FROM_EMAIL, [user.email])
+        msg = EmailMultiAlternatives(sujet, texte, de, [user.email], connection=connexion)
         msg.attach_alternative(html, "text/html")
         msg.send()
         EnvoiRecap.objects.update_or_create(
@@ -99,15 +99,20 @@ def _sujet(ctx):
 def alerter_impaye(echeance):
     dest = [u.email for u in destinataires(["Valideur"])]
     if not dest:
-        return
+        return True
     ctx = {"e": echeance, "site_url": settings.SITE_URL.rstrip("/")}
     msg = EmailMultiAlternatives(
         f"ÉchéancePro — IMPAYÉ : {echeance.fournisseur} ({echeance.banque})",
-        render_to_string("emails/impaye.txt", ctx), settings.DEFAULT_FROM_EMAIL, dest,
+        render_to_string("emails/impaye.txt", ctx), mail.expediteur(), dest, connection=mail.connexion(),
     )
-    msg.send()
+    try:
+        msg.send()
+    except Exception:
+        log.exception("Alerte d'impayé non envoyée")
+        return False
     _sms(f"ÉchéancePro : impayé {echeance.get_type_display()} {echeance.fournisseur} "
          f"{int(echeance.montant_total):,} F CFA ({echeance.banque}).".replace(",", " "))
+    return True
 
 
 # --- SMS / WhatsApp ----------------------------------------------------------

@@ -143,8 +143,7 @@ EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "ÉchéancePro <alertes@example.com>")
 
 # --- Alertes ----------------------------------------------------------------
-# Paliers d'alerte, en jours avant l'échéance (0 = le jour même).
-ALERTE_PALIERS = [int(x) for x in os.getenv("ALERTE_PALIERS", "15,7,3,0").split(",")]
+# Les paliers d'alerte et le serveur e-mail se règlent dans l'application (Administration > Alertes e-mail).
 # Adresse du logiciel, utilisée pour les liens dans les e-mails.
 SITE_URL = os.getenv("SITE_URL", "http://127.0.0.1:8000")
 

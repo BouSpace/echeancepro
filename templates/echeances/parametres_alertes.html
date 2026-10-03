@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block titre %}Alertes e-mail{% endblock %}
+{% block contenu %}
+<div class="titre-page">
+  <div><h1>Alertes e-mail</h1><p>Serveur d'envoi des notifications et paliers d'alerte.</p></div>
+</div>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<p class="erreur">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+
+  <section class="panneau">
+    <h2>Serveur d'envoi (SMTP)</h2>
+    <p class="discret">
+      Source actuellement utilisée :
+      <strong>{% if parametres.utilisable %}les réglages ci-dessous{% else %}les réglages du serveur (fichier .env){% endif %}</strong>.
+    </p>
+    {% if parametres.mot_de_passe_illisible %}
+    <p class="erreur">Le mot de passe enregistré n'est plus lisible (la clé secrète du logiciel a changé). Saisissez-le à nouveau.</p>
+    {% endif %}
+    <div class="formulaire">
+      <div class="champ champ--large">
+        <label for="{{ form.utiliser.id_for_label }}" class="case-droit">{{ form.utiliser }} {{ form.utiliser.label|capfirst }}</label>
+        <span class="aide">{{ form.utiliser.help_text }}</span>
+        {% for err in form.utiliser.errors %}<span class="erreur">{{ err }}</span>{% endfor %}
+      </div>
+      {% for f in form %}{% if f.name in "hote port securite utilisateur mot_de_passe expediteur_nom expediteur_adresse" %}
+      <div class="champ">
+        <label for="{{ f.id_for_label }}">{{ f.label|capfirst }}</label>
+        {{ f }}
+        {% if f.help_text %}<span class="aide">{{ f.help_text }}</span>{% endif %}
+        {% if f.name == "mot_de_passe" and parametres.mot_de_passe_maj %}<span class="aide">Dernière mise à jour : {{ parametres.mot_de_passe_maj|date:"d/m/Y H:i" }}.</span>{% endif %}
+        {% for err in f.errors %}<span class="erreur">{{ err }}</span>{% endfor %}
+      </div>
+      {% endif %}{% endfor %}
+    </div>
+  </section>
+
+  <section class="panneau">
+    <h2>Paliers d'alerte</h2>
+    <div class="formulaire">
+      <div class="champ">
+        <label for="{{ form.paliers.id_for_label }}">{{ form.paliers.label|capfirst }}</label>
+        {{ form.paliers }}
+        <span class="aide">{{ form.paliers.help_text }}</span>
+        {% for err in form.paliers.errors %}<span class="erreur">{{ err }}</span>{% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button class="btn" type="submit" name="action" value="enregistrer">Enregistrer</button>
+    <button class="btn btn--clair" type="submit" name="action" value="tester">Envoyer un e-mail de test à {{ user.email|default:"mon adresse" }}</button>
+  </div>
+  <p class="aide">Le test utilise les valeurs saisies, sans les enregistrer. Retapez le mot de passe pour tester un nouveau mot de passe.</p>
+</form>
+{% endblock %}

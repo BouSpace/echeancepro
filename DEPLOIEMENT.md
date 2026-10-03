@@ -88,6 +88,9 @@ sudo chmod 600 .env
 sudo -u echeancepro nano .env       # DOMAINE, clé secrète, mot de passe PostgreSQL, SMTP…
 ```
 
+Les réglages e-mail du `.env` servent de réglages par défaut : une fois connecté en superutilisateur, vous pouvez les remplacer dans l'application (menu **Administration > Alertes e-mail**), avec un bouton de test d'envoi.
+Le mot de passe SMTP saisi dans l'application est chiffré avec la `SECRET_KEY` : si vous changez cette clé, il faudra le ressaisir.
+
 Générez la clé secrète avec : `python3 -c "import secrets; print(secrets.token_urlsafe(60))"`.
 L'application refuse de démarrer en production avec la clé d'exemple.
 

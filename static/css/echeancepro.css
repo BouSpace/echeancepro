@@ -133,11 +133,11 @@ main { width: 100%; max-width: 1240px; margin: 0 auto; padding: 1.75rem 1.5rem 4
   background: var(--papier); border: 1px solid var(--trait); border-radius: var(--rayon);
   margin-bottom: 1.75rem; overflow: hidden;
 }
-.chiffre { padding: 1.1rem 1.4rem; text-decoration: none; color: inherit; }
+.chiffre { padding: 1.1rem 1.4rem; text-decoration: none; color: inherit; min-width: 0; }
 .chiffre + .chiffre { border-left: 1px solid var(--trait); }
 .chiffre:hover { background: var(--fond); }
 .chiffre__libelle { font-weight: 600; color: var(--gris); }
-.chiffre__valeur { font: 800 1.7rem/1.2 var(--titres); margin: .2rem 0; font-variant-numeric: tabular-nums; }
+.chiffre__valeur { font: 800 clamp(1.05rem, 1.5vw, 1.7rem)/1.25 var(--titres); margin: .2rem 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .chiffre__detail { color: var(--gris); font-size: .95rem; }
 .chiffre--alerte { background: var(--rouge-pale); }
 .chiffre--alerte .chiffre__valeur, .chiffre--alerte .chiffre__libelle { color: var(--rouge); }
@@ -210,6 +210,8 @@ textarea { width: 100%; }
 .formulaire .champ { display: grid; gap: .3rem; align-content: start; }
 .formulaire .champ--large { grid-column: 1 / -1; }
 .formulaire input, .formulaire select { width: 100%; }
+.formulaire input[type=checkbox], .formulaire input[type=radio] { width: 1.05rem; height: 1.05rem; flex: none; }
+.formulaire .champ:has(> input[type=checkbox]) { align-content: start; }
 .aide { color: var(--gris); font-size: .85rem; }
 .erreur { color: var(--rouge); font-size: .9rem; }
 .actions { display: flex; gap: .75rem; margin-top: 1.5rem; flex-wrap: wrap; }

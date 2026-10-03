@@ -10,7 +10,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from . import excel
-from .models import Banque, Echeance, Fournisseur
+from . import mail as mail_app
+from .models import Banque, Echeance, Fournisseur, ParametresAlertes
 from .notifications import envoyer_recap
 
 
@@ -99,3 +100,51 @@ class AlertesTests(Base):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn("1 en retard", mail.outbox[0].subject)
         self.assertEqual(envoyer_recap(), 0)
+
+
+class ParametresAlertesTests(Base):
+    def test_mot_de_passe_chiffre_et_relu(self):
+        p = ParametresAlertes.charger()
+        p.mot_de_passe_chiffre = mail_app.chiffrer("secret-smtp")
+        self.assertNotIn("secret-smtp", p.mot_de_passe_chiffre)
+        self.assertEqual(p.mot_de_passe(), "secret-smtp")
+
+    def test_paliers_personnalises(self):
+        ParametresAlertes.objects.update_or_create(pk=1, defaults={"paliers": "30,10"})
+        self.creer(30)
+        self.creer(10)
+        self.creer(7)  # plus un palier : ne doit pas être signalé
+        ctx = __import__("echeances.notifications", fromlist=["x"]).construire_recap()
+        self.assertEqual([p["jours"] for p in ctx["paliers"]], [30, 10])
+
+    def test_reglages_smtp_utilises_si_actives(self):
+        p = ParametresAlertes.charger()
+        p.utiliser, p.hote, p.expediteur_adresse = True, "smtp.exemple.test", "alertes@exemple.test"
+        p.save()
+        self.assertEqual(mail_app.connexion().host, "smtp.exemple.test")
+        self.assertIn("alertes@exemple.test", mail_app.expediteur())
+
+    def test_page_reservee_et_mot_de_passe_jamais_affiche(self):
+        self.client.force_login(self.gest)
+        self.assertEqual(self.client.get(reverse("parametres_alertes")).status_code, 403)
+        admin = User.objects.create_superuser("adm", "adm@ex.com", "motdepasse-123")
+        self.client.force_login(admin)
+        self.client.post(reverse("parametres_alertes"), {
+            "action": "enregistrer", "utiliser": "on", "hote": "smtp.exemple.test", "port": 587, "securite": "tls",
+            "utilisateur": "u", "mot_de_passe": "tres-secret", "expediteur_nom": "X",
+            "expediteur_adresse": "a@exemple.test", "paliers": "7,15",
+        })
+        p = ParametresAlertes.charger()
+        self.assertEqual(p.mot_de_passe(), "tres-secret")
+        self.assertEqual(p.paliers, "15,7")
+        self.assertNotIn("tres-secret", self.client.get(reverse("parametres_alertes")).content.decode())
+
+    def test_formulaire_refuse_hote_manquant(self):
+        admin = User.objects.create_superuser("adm", "adm@ex.com", "motdepasse-123")
+        self.client.force_login(admin)
+        r = self.client.post(reverse("parametres_alertes"), {
+            "action": "enregistrer", "utiliser": "on", "hote": "", "port": 587, "securite": "tls",
+            "expediteur_nom": "X", "expediteur_adresse": "", "paliers": "15,7,3",
+        })
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(ParametresAlertes.charger().utiliser)

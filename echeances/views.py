@@ -16,8 +16,8 @@ from django.db.models import Count, ProtectedError
 from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
 
 from . import excel
-from .forms import FiltreAuditForm, RoleForm, PeriodeForm, BanqueForm, ClotureForm, EcheanceForm, FournisseurForm, FiltreForm, ImportForm, FiltreUtilisateurForm, ProfilForm, UtilisateurModifierForm, UtilisateurForm
-from .models import Banque, Echeance, EvenementRole, Fournisseur, Periode
+from .forms import FiltreAuditForm, ParametresAlertesForm, RoleForm, PeriodeForm, BanqueForm, ClotureForm, EcheanceForm, FournisseurForm, FiltreForm, ImportForm, FiltreUtilisateurForm, ProfilForm, UtilisateurModifierForm, UtilisateurForm
+from .models import Banque, Echeance, EvenementRole, Fournisseur, ParametresAlertes, Periode
 
 
 def _total(qs):
@@ -249,8 +249,11 @@ def cloturer(request, pk):
         e.cloturer(statut, form.cleaned_data["date_cloture"], form.cleaned_data["reference"], request.user)
         if statut == Echeance.Statut.IMPAYEE:
             from .notifications import alerter_impaye
-            alerter_impaye(e)
-            messages.warning(request, "Échéance marquée impayée. Les valideurs ont été prévenus.")
+            if alerter_impaye(e):
+                messages.warning(request, "Échéance marquée impayée. Les valideurs ont été prévenus.")
+            else:
+                messages.warning(request, "Échéance marquée impayée, mais l'e-mail d'alerte n'a pas pu être envoyé "
+                                          "(vérifiez les réglages e-mail).")
         else:
             messages.success(request, f"Échéance marquée « {e.get_statut_display().lower()} ».")
         return redirect(e)
@@ -565,15 +568,33 @@ AUDIT_OBJETS = {
     "banque": ("Banque", Banque, "banque_detail"),
     "fournisseur": ("Fournisseur", Fournisseur, "fournisseur_detail"),
     "periode": ("Période", Periode, None),
+    "parametres": ("Alertes e-mail", ParametresAlertes, None),
 }
 AUDIT_ACTIONS = {"+": ("Création", "statut--PAYEE"), "~": ("Modification", "statut--A_VENIR"), "-": ("Suppression", "statut--IMPAYEE")}
 AUDIT_IGNORES = ["modifie_le", "cree_le"]
 
 
 def _audit_libelle(cle, h):
+    if cle == "parametres":
+        return "Serveur e-mail et paliers d'alerte"
     if cle == "echeance":
         return f"{h.get_type_display()} du {h.date_echeance:%d/%m/%Y} — {int(h.montant):,} F CFA".replace(",", "\u202f")
     return getattr(h, "libelle", None) or h.nom
+
+
+def _audit_valeur(champ, v):
+    """Valeur lisible d'un champ pour le journal : libellé d'un choix, date en jj/mm/aaaa, oui/non, montant espacé."""
+    if v in ("", None):
+        return "(vide)"
+    if champ.choices:
+        return str(dict(champ.flatchoices).get(v, v))
+    if isinstance(v, bool):
+        return "oui" if v else "non"
+    if hasattr(v, "strftime"):
+        return v.strftime("%d/%m/%Y")
+    if champ.get_internal_type() == "DecimalField":
+        return f"{int(v):,}".replace(",", " ")
+    return str(v)
 
 
 def _audit_changements(h):
@@ -584,12 +605,12 @@ def _audit_changements(h):
     out = []
     for c in h.diff_against(prev, excluded_fields=AUDIT_IGNORES).changes:
         champ = h.instance_type._meta.get_field(c.field)
-        nom = str(champ.verbose_name).capitalize()
+        nom = str(champ.verbose_name)
+        nom = nom[:1].upper() + nom[1:]
         if champ.is_relation or c.field == "piece_jointe":
             out.append(f"{nom} modifié(e)")
         else:
-            ancien, nouveau = (v if v not in ("", None) else "—" for v in (c.old, c.new))
-            out.append(f"{nom} : {ancien} → {nouveau}")
+            out.append(f"{nom} : {_audit_valeur(champ, c.old)} → {_audit_valeur(champ, c.new)}")
     return out
 
 
@@ -720,3 +741,30 @@ def fichier_media(request, chemin):
     reponse["X-Accel-Redirect"] = "/protected-media/" + chemin
     reponse["Content-Type"] = ""  # laisse Nginx déterminer le type
     return reponse
+
+
+# --- Alertes e-mail : serveur d'envoi et paliers ---------------------------------------------
+
+@login_required
+@permission_required("echeances.gerer_parametres_alertes", raise_exception=True)
+def parametres_alertes(request):
+    from . import mail
+
+    p = ParametresAlertes.charger()
+    form = ParametresAlertesForm(request.POST or None, instance=p)
+    if request.method == "POST" and form.is_valid():
+        if request.POST.get("action") == "tester":
+            d = form.cleaned_data
+            if not request.user.email:
+                messages.error(request, "Renseignez d'abord votre adresse e-mail dans votre profil : le test y est envoyé.")
+            else:
+                ok, detail = mail.envoyer_test(
+                    request.user.email, d["hote"], d["port"], d["securite"], d["utilisateur"],
+                    d["mot_de_passe"] or p.mot_de_passe(), d["expediteur_nom"], d["expediteur_adresse"],
+                )
+                (messages.success if ok else messages.error)(request, detail)
+        else:
+            form.save()
+            messages.success(request, "Paramètres enregistrés.")
+            return redirect("parametres_alertes")
+    return render(request, "echeances/parametres_alertes.html", {"form": form, "parametres": p})

@@ -51,6 +51,9 @@ CATALOGUE = [
     ("Audit", [
         ("echeances.view_historicalecheance", "Consulter le journal d'audit"),
     ]),
+    ("Alertes", [
+        ("echeances.gerer_parametres_alertes", "Gérer le serveur e-mail et les paliers d'alerte"),
+    ]),
 ]
 
 LIBELLES = {code: libelle for _, items in CATALOGUE for code, libelle in items}

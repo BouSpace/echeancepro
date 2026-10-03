@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group
 from django.utils import timezone
 
 from . import permissions as droits
-from .models import Banque, Echeance, EvenementRole, Fournisseur, Periode, Profil
+from .models import Banque, Echeance, EvenementRole, Fournisseur, ParametresAlertes, Periode, Profil
 
 
 class DateInput(forms.DateInput):
@@ -243,7 +243,7 @@ class PeriodeForm(forms.ModelForm):
 
 class FiltreAuditForm(forms.Form):
     OBJETS = [("", "Tous"), ("echeance", "Échéances"), ("banque", "Banques"),
-              ("fournisseur", "Fournisseurs"), ("periode", "Périodes"), ("role", "Rôles")]
+              ("fournisseur", "Fournisseurs"), ("periode", "Périodes"), ("role", "Rôles"), ("parametres", "Alertes e-mail")]
     ACTIONS = [("", "Toutes"), ("+", "Créations"), ("~", "Modifications"), ("-", "Suppressions")]
 
     objet = forms.ChoiceField(label="Objet", choices=OBJETS, required=False)
@@ -311,3 +311,48 @@ class RoleForm(forms.ModelForm):
                 utilisateur=self.editeur, action="+" if creation else "~", nom=groupe.name, detail="\n".join(lignes),
             )
         return groupe
+
+
+class ParametresAlertesForm(forms.ModelForm):
+    mot_de_passe = forms.CharField(
+        label="mot de passe", required=False,
+        widget=forms.PasswordInput(render_value=False, attrs={"autocomplete": "new-password"}),
+        help_text="Laissez vide pour conserver le mot de passe enregistré. Il est stocké chiffré et jamais réaffiché.",
+    )
+
+    class Meta:
+        model = ParametresAlertes
+        fields = ["utiliser", "hote", "port", "securite", "utilisateur", "mot_de_passe",
+                  "expediteur_nom", "expediteur_adresse", "paliers"]
+
+    def clean_paliers(self):
+        brut = self.cleaned_data["paliers"]
+        try:
+            jours = sorted({int(x) for x in brut.split(",") if x.strip()}, reverse=True)
+        except ValueError:
+            raise forms.ValidationError("Saisissez des nombres de jours séparés par des virgules, ex. : 15,7,3.")
+        if not jours or min(jours) < 1 or len(jours) > 6:
+            raise forms.ValidationError("Indiquez entre 1 et 6 paliers, chacun d'au moins 1 jour.")
+        return ",".join(str(j) for j in jours)
+
+    def clean(self):
+        data = super().clean()
+        if data.get("utiliser"):
+            if not data.get("hote"):
+                self.add_error("hote", "Indiquez le serveur SMTP pour utiliser ces réglages.")
+            if not data.get("expediteur_adresse"):
+                self.add_error("expediteur_adresse", "Indiquez l'adresse de l'expéditeur.")
+        return data
+
+    def save(self, commit=True):
+        from django.utils import timezone
+        from .mail import chiffrer
+
+        p = super().save(commit=False)
+        nouveau = self.cleaned_data.get("mot_de_passe")
+        if nouveau:
+            p.mot_de_passe_chiffre = chiffrer(nouveau)
+            p.mot_de_passe_maj = timezone.now()
+        if commit:
+            p.save()
+        return p
