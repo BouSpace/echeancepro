@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.core.paginator import Paginator
+from django.utils.http import urlencode
 from django.db.models import Count, ProtectedError
 from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
 
@@ -554,6 +555,8 @@ class BanqueDetail(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
                     ("Statut", "Active" if o.actif else "Inactive")],
             echeances=o.echeances.select_related("fournisseur").order_by("-date_echeance")[:15],
             peut_modifier=self.request.user.has_perm("echeances.change_banque"),
+            tiers="fournisseur", type_fiche="Fiche banque", url_toutes=f"{reverse('liste')}?banque={o.pk}",
+            **{**_contexte_document(timezone.localdate()), "reference": ""},
         )
         return ctx
 
@@ -573,6 +576,8 @@ class FournisseurDetail(LoginRequiredMixin, PermissionRequiredMixin, DetailView)
                     ("Statut", "Actif" if o.actif else "Inactif")],
             echeances=o.echeances.select_related("banque").order_by("-date_echeance")[:15],
             peut_modifier=self.request.user.has_perm("echeances.change_fournisseur"),
+            tiers="banque", type_fiche="Fiche fournisseur", url_toutes=f"{reverse('liste')}?{urlencode({'q': o.nom})}",
+            **{**_contexte_document(timezone.localdate()), "reference": ""},
         )
         return ctx
 

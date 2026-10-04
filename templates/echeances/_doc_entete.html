@@ -17,6 +17,6 @@
     <h1>{{ titre }}</h1>
     {% if situation %}<p>Situation au {{ today|date:"d/m/Y" }}</p>{% endif %}
     {% if sous_titre %}<p>{{ sous_titre }}</p>{% endif %}
-    <p class="doc-meta">Réf. {{ reference }} · Édité le {% now "d/m/Y à H:i" %} par {{ user.get_full_name|default:user.username }}</p>
+    <p class="doc-meta">{% if reference %}Réf. {{ reference }} · {% endif %}Édité le {% now "d/m/Y à H:i" %} par {{ user.get_full_name|default:user.username }}</p>
   </div>
 </header>

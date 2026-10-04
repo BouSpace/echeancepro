@@ -311,7 +311,7 @@ textarea { width: 100%; }
   .doc-kpi { padding: .45rem .6rem; }
   .doc-kpi__valeur { font-size: 1.05rem; }
   .doc-total-mois { margin-top: .4rem; }
-  @page { @bottom-left { content: "ÉchéancePro — montants à approvisionner"; font: 8pt "Source Sans 3", Arial, sans-serif; color: #5B6B82; }
+  @page { @bottom-left { content: "ÉchéancePro"; font: 8pt "Source Sans 3", Arial, sans-serif; color: #5B6B82; }
           @bottom-right { content: "Page " counter(page) " / " counter(pages); font: 8pt "Source Sans 3", Arial, sans-serif; color: #5B6B82; } }
   body { background: #fff; font-size: 11pt; }
   main { padding: 0; }
